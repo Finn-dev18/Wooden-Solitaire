@@ -8,8 +8,6 @@ public class Game {
         Input input = new Input();
         int moveCount = 0;
 
-        System.out.println("=== PEG SOLITAIRE ===");
-
         while (true) {
 
             board.print();
@@ -19,7 +17,7 @@ public class Game {
 
             if (userIn.equalsIgnoreCase("exit")) {
                 System.out.println("Spiel beendet.");
-                System.out.printf("Endstand – Züge: %d | Übrige Bälle: %d%n", moveCount, board.countPegs());
+                System.out.printf("Endstand - Züge: %d | Übrige Bälle: %d%n", moveCount, board.countPegs());
                 break;
             }
 
@@ -35,21 +33,19 @@ public class Game {
                 continue;
             }
 
-            // gültig → ausführen
             int fr = move.getFromRow(), fc = move.getFromCol();
             int tr = move.getToRow(), tc = move.getToCol();
 
-            board.set(fr, fc, '○'); // start wird leer
-            board.set((fr + tr) / 2, (fc + tc) / 2, '○'); // übersprungener Peg weg
-            board.set(tr, tc, '●'); // Peg an Ziel
+            board.set(fr, fc, '○')
+            board.set((fr + tr) / 2, (fc + tc) / 2, '○');
+            board.set(tr, tc, '●');
             moveCount++;
 
-            // Prüfen ob noch Züge möglich sind
             if (!status.hasMovesLeft(board, validator)) {
                 board.print();
                 System.out.printf("Züge: %d | Übrige Bälle: %d%n", moveCount, board.countPegs());
                 System.out.println("Keine Züge mehr möglich! Spiel vorbei.");
-                System.out.printf("Endstand – Züge: %d | Übrige Bälle: %d%n", moveCount, board.countPegs());
+                System.out.printf("Endstand - Züge: %d | Übrige Bälle: %d%n", moveCount, board.countPegs());
                 break;
             }
         }

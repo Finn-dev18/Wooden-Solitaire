@@ -6,24 +6,20 @@ public class MoveValidator {
         int tr = move.getToRow();
         int tc = move.getToCol();
 
-        // Grenzen checken
         if (!inBounds(fr, fc) || !inBounds(tr, tc))
             return false;
-
-        // Start muss ein Peg sein
+  
         if (board.get(fr, fc) != '●') return false;
 
-        // Ziel muss leer sein
+
         if (board.get(tr, tc) != '○') return false;
 
-        // Bewegung muss 2 Felder sein
         if (Math.abs(fr - tr) == 2 && fc == tc) {
-            return board.get((fr + tr) / 2, fc) == '●'; // vertikal
+            return board.get((fr + tr) / 2, fc) == '●';
         }
         if (Math.abs(fc - tc) == 2 && fr == tr) {
-            return board.get(fr, (fc + tc) / 2) == '●'; // horizontal
+            return board.get(fr, (fc + tc) / 2) == '●';
         }
-
         return false;
     }
 

@@ -4,7 +4,6 @@ public class GameStatus {
         for (int r = 0; r < 7; r++) {
             for (int c = 0; c < 7; c++) {
                 if (board.get(r, c) == '●') {
-                    // vier mögliche Richtungen
                     if (check(board, validator, r, c, r, c + 2)) return true;
                     if (check(board, validator, r, c, r, c - 2)) return true;
                     if (check(board, validator, r, c, r + 2, c)) return true;
