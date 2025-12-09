@@ -6,9 +6,9 @@ alles, was er/sie wissen muss. Üblicherweise sollte der Kommentar
 zumindest die folgenden Angaben umfassen:
 ------------------------------------------------------------------------
 
-PROJEKTBEZEICHNUNG:
-PROJEKTZWECK:
-VERSION oder DATUM:
+PROJEKTBEZEICHNUNG: Wooden Solitär
+PROJEKTZWECK: Informatik Projekt K1 HJ 1
+VERSION oder DATUM: v1 09.12.2025
 WIE IST DAS PROJEKT ZU STARTEN:
-AUTOR(EN):
+AUTOR(EN): Finn Späh, Henry Horlebein, Aiden
 BENUTZERHINWEISE:

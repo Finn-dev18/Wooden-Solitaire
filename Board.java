@@ -22,6 +22,18 @@ public class Board {
         field[r][c] = value;
     }
 
+    public int countPegs() {
+        int count = 0;
+        for (int r = 0; r < 7; r++) {
+            for (int c = 0; c < 7; c++) {
+                if (field[r][c] == '●') {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
     public void print() {
         System.out.println("    A  B  C  D  E  F  G");
         for (int r = 0; r < 7; r++) {
