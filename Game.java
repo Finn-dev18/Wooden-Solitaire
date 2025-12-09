@@ -36,7 +36,7 @@ public class Game {
             int fr = move.getFromRow(), fc = move.getFromCol();
             int tr = move.getToRow(), tc = move.getToCol();
 
-            board.set(fr, fc, '○')
+            board.set(fr, fc, '○');
             board.set((fr + tr) / 2, (fc + tc) / 2, '○');
             board.set(tr, tc, '●');
             moveCount++;
