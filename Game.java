@@ -16,7 +16,7 @@ public class Game {
             String userIn = input.getUserInput();
 
             if (userIn.equalsIgnoreCase("exit")) {
-                System.out.println("Spiel beendet.");
+                System.out.println("\nSpiel beendet.");
                 System.out.printf("Endstand - Züge: %d | Übrige Bälle: %d%n", moveCount, board.countPegs());
                 break;
             }
@@ -24,12 +24,12 @@ public class Game {
             Move move = input.parse(userIn);
 
             if (move == null) {
-                System.out.println("Ungültiges Format!");
+                System.out.println("\nUngültiges Format!");
                 continue;
             }
 
             if (!validator.isValid(board, move)) {
-                System.out.println("Ungültiger Zug!");
+                System.out.println("\nUngültiger Zug!");
                 continue;
             }
 

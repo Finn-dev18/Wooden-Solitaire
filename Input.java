@@ -10,20 +10,46 @@ public class Input {
     }
 
     public Move parse(String s) {
+        if (s == null) return null;
         try {
-            String[] parts = s.split(" ");
-            String p1 = parts[0];
-            String p2 = parts[1];
+            String[] parts = s.trim().toUpperCase().split("\\s+");
+            
+            if (parts.length != 2) return null;
 
-            int fromCol = p1.charAt(0) - 'A';
-            int fromRow = p1.charAt(1) - '1';
-            int toCol   = p2.charAt(0) - 'A';
-            int toRow   = p2.charAt(1) - '1';
+            int[] from = parseCoordinate(parts[0]);
+            int[] to = parseCoordinate(parts[1]);
 
-            return new Move(fromRow, fromCol, toRow, toCol);
+            if (from == null || to == null) return null;
+
+            return new Move(from[0], from[1], to[0], to[1]);
 
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private int[] parseCoordinate(String p) {
+        if (p.length() < 2) return null;
+        
+        char c1 = p.charAt(0);
+        char c2 = p.charAt(1);
+        
+        int row = -1;
+        int col = -1;
+
+        // Case 1: Letter Digit (e.g., E4)
+        if (Character.isLetter(c1) && Character.isDigit(c2)) {
+            col = c1 - 'A';
+            row = c2 - '1';
+        }
+        // Case 2: Digit Letter (e.g., 4E)
+        else if (Character.isDigit(c1) && Character.isLetter(c2)) {
+            row = c1 - '1';
+            col = c2 - 'A';
+        } else {
+            return null;
+        }
+        
+        return new int[]{row, col};
     }
 }
