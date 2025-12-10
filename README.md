@@ -50,10 +50,10 @@ Du kannst das Spiel jederzeit mit dem Befehl `exit` verlassen.
 
 ## ⏲️ Version History:
 ```
-- v1.4.1: Dokumentation erweitert
-- v1.4: Input Erweiterung
-- v1.3.2: Syntax Fixed
-- v1.3.1: Code Cleanup und ReadMe erweiterung
-- v1.2: Zug- und Bälle Counter hinzugefügt
+- v1.3.1: Dokumentation erweitert
+- v1.3: Input Erweiterung
+- v1.2.2: Syntax Fixed
+- v1.2.1: Code Cleanup und ReadMe erweiterung
+- v1.1: Zug- und Bälle Counter hinzugefügt
 - v1.0: Initial commit
 ```
