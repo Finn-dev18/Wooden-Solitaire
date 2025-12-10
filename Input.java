@@ -37,12 +37,11 @@ public class Input {
         int row = -1;
         int col = -1;
 
-        // Case 1: Letter Digit (e.g., E4)
         if (Character.isLetter(c1) && Character.isDigit(c2)) {
             col = c1 - 'A';
             row = c2 - '1';
         }
-        // Case 2: Digit Letter (e.g., 4E)
+        
         else if (Character.isDigit(c1) && Character.isLetter(c2)) {
             row = c1 - '1';
             col = c2 - 'A';

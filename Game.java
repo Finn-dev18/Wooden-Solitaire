@@ -24,12 +24,12 @@ public class Game {
             Move move = input.parse(userIn);
 
             if (move == null) {
-                System.out.println("\nUngültiges Format!");
+                System.out.println("\nUngültiges Format!\n");
                 continue;
             }
 
             if (!validator.isValid(board, move)) {
-                System.out.println("\nUngültiger Zug!");
+                System.out.println("\nUngültiger Zug!\n");
                 continue;
             }
 
