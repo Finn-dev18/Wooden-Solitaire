@@ -35,7 +35,7 @@ public class Board {
     }
 
     public void print() {
-        System.out.println("    A  B  C  D  E  F  G");
+        System.out.println("\n    A  B  C  D  E  F  G");
         for (int r = 0; r < 7; r++) {
             System.out.print((r + 1) + "  ");
             for (int c = 0; c < 7; c++) {
