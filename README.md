@@ -8,9 +8,6 @@ Informatik Projekt der K1 von Henry Horlebein, Finn Späh und Aiden Kurz-Feuerst
 Textbasierte, digitale Version des klassischen "Wooden Solitaire", bei dem man über andere Kugeln springen muss, um diese vom Feld zu entfernen. Ziel des Spiels ist es nur noch eine  bzw. möglichst wenig Kugeln auf dem Feld übrig zu haben.
 
 ## 🚀 Start
-
-### Voraussetzungen
-- BlueJ
 ### ✨ Abläufe 
 - Das Spiel startet mit einem komplett mit Kugeln befülltem Feld, wobei die mittlere Kugel fehlt
 - Man springt nun so lange über eine andere nebenliegende Kugel, in einen nicht belegten "Slot", bis nur noch eine Kugel vorhanden ist oder es keinen möglichen Zug mehr gibt.
@@ -35,7 +32,10 @@ Beim überlegen wie viele und welche Klassen wir benötigen, haben wir eine List
 -	Game
     - Verbindet alle Klassen miteinander und bildet die Konsolen ausgaben, die das Spiel verständlich machen 
 
+
 ### Spiel starten
+
+**Vorraussetzungen:** Eine installierte Version von [BlueJ](https://www.bluej.org/)
 1. Öffne das Projekt in BlueJ.
 2. Rechts-Click auf die `Game`-Klasse.
 3. `void main(String[] args)` auswählen und die Eingabe mit `OK` bestätigen.
@@ -73,18 +73,10 @@ Du kannst das Spiel jederzeit mit dem Befehl `exit` verlassen.
 
 ## ⏲️ Version History:
 ```
-<<<<<<< HEAD
 - v1.3.1: Dokumentation erweitert
 - v1.3: Input Erweiterung
 - v1.2.2: Syntax Fixed
 - v1.2.1: Code Cleanup und ReadMe erweiterung
 - v1.1: Zug- und Bälle Counter hinzugefügt
-=======
-- v1.4.1: Dokumentation erweitert
-- v1.4: Input Erweiterung
-- v1.3.2: Syntax Fixed
-- v1.3.1: Code Cleanup und ReadMe Erweiterung
-- v1.2: Zug- und Bälle Counter hinzugefügt
->>>>>>> c18c2839dd937cd83486287f81976fee25ac34e4
 - v1.0: Initial commit
 ```
