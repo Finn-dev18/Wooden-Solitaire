@@ -7,7 +7,6 @@ Informatik Projekt der K1 von Henry Horlebein, Finn Späh und Aiden Kurz-Feuerst
 
 Textbasierte, digitale Version des klassischen "Wooden Solitaire", bei dem man über andere Kugeln springen muss, um diese vom Feld zu entfernen. Ziel des Spiels ist es nur noch eine  bzw. möglichst wenig Kugeln auf dem Feld übrig zu haben.
 
-## 🚀 Start
 ### ✨ Abläufe 
 - Das Spiel startet mit einem komplett mit Kugeln befülltem Feld, wobei die mittlere Kugel fehlt
 - Man springt nun so lange über eine andere nebenliegende Kugel, in einen nicht belegten "Slot", bis nur noch eine Kugel vorhanden ist oder es keinen möglichen Zug mehr gibt.
@@ -21,22 +20,16 @@ Textbasierte, digitale Version des klassischen "Wooden Solitaire", bei dem man �
 Beim überlegen wie viele und welche Klassen wir benötigen, haben wir eine Liste erstellt und sind auf diese sechs Klassen gekommen. 
 -	Board
     - Enthält das Spielfeld und alle Kugeln
--	MoveValidator
+-	Move validator
     - Prüft ob der vom Player gemacht Zug durchgeführt werden kann, ohne dabei Regeln zu missachten 
 -	Input
     - Scannt die Konsole nach dem Input des Spielers und sortiert dabei nach Reihe und Zeile, sodass das Spiel intuitiv und das Eingabeformat nicht zu kompliziert ist
 - Move 
     - Wirkt als zwischen "Stück" zwischen dem Input, dem MoveValidator und dem Board
--	GameStatus 
+-	Gamestatus 
      - Prüft ob das Spiel vorbei ist, also ob noch Züge übrig sind
 -	Game
     - Verbindet alle Klassen miteinander und bildet die Konsolen ausgaben, die das Spiel verständlich machen 
-
-### Spiel starten
-1. Öffne das Projekt in BlueJ.
-2. Rechts-Click auf die `Game`-Klasse.
-3. `void main(String[] args)` auswählen und die Eingabe mit `OK` bestätigen.
-4. Spielzug über Konsole Eingeben.
 
 ## 🕹️ Spielanleitung
 
@@ -48,32 +41,22 @@ Das Spielfeld wird mit Koordinaten angezeigt:
   - `○` = Leeres Feld
 
 ### Einen Zug machen
-Um einen Stein zu bewegen musst du die **Start-Koordinate** und **Ziel-Koordinate** wie in folgenden beispielen eingeben:
+Gib die **Start-Koordinate** und die **Ziel-Koordinate** getrennt durch ein Leerzeichen ein.
 
-
-#### Beispiel:
+**Beispiel:**
 Um einen Stein von **E4** nach **E6** zu bewegen:
 ```text
 Zug eingeben: E4 E6
 ```
 
 ### Spiel beenden
-Du kannst das Spiel jederzeit mit dem Befehl `exit` verlassen.
+Tippe `exit`, um das Spiel zu verlassen.
 
 ## 👥 Autoren
 
 - **Finn Späh**
 - **Henry Horlebein**
-- **Aiden Kurz-Feuerstein**
+- **Aiden Kurzfeuerstein**
 
 ---
-
-## ⏲️ Version History:
-```
-- v1.4.1: Dokumentation erweitert
-- v1.4: Input Erweiterung
-- v1.3.2: Syntax Fixed
-- v1.3.1: Code Cleanup und ReadMe Erweiterung
-- v1.2: Zug- und Bälle Counter hinzugefügt
-- v1.0: Initial commit
-```
+*Erstellt am 09.12.2025 - Version 1.2*
