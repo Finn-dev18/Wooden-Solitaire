@@ -14,6 +14,8 @@ Informatik Projekt der K1 von Henry Horlebein, Finn Späh und Aiden Kurz-Feuerst
 
 Textbasierte, digitale Version des klassischen "Wooden Solitaire", bei dem man über andere Kugeln springen muss, um diese vom Feld zu entfernen. Ziel des Spiels ist es nur noch eine  bzw. möglichst wenig Kugeln auf dem Feld übrig zu haben.
 
+![Spiel Demo](images/demo.png "Spiel Demo")
+
 ###  **Abläufe** 
 - Das Spiel startet mit einem komplett mit Kugeln befülltem Feld, wobei die mittlere Kugel fehlt
 - Man springt nun so lange über eine andere nebenliegende Kugel, in einen nicht belegten "Slot", bis nur noch eine Kugel vorhanden ist oder es keinen möglichen Zug mehr gibt.
@@ -139,6 +141,7 @@ Wooden Solitär war das einzige, von denen zu uns verfügbaren Spielen, die uns 
 
  ## Version History:
 ```
+- v1.5.1: Spiel Demobild hinzugefügt
 - v1.5: Inhaltsverzeichnis
 - v1.4.1: UML-Erweiterung
 - v1.4: UML-Diagramm, Formatierung
