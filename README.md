@@ -75,7 +75,7 @@ Du kannst das Spiel jederzeit mit dem Befehl `exit` verlassen.
                  ├────────────────────┤
                  │                    │
                  ├────────────────────┤
-                 │                    │
+                 │   + void main()    │
                  └─────────┬──────────┘
                            │
         ┌──────────────────┼──────────────────┐
@@ -111,10 +111,17 @@ Du kannst das Spiel jederzeit mit dem Befehl `exit` verlassen.
 │ + hasMovesLeft() │
 └──────────────────┘
 ```
+### **Beschreibung UML**
 ```
-- -> Private
-+ -> Public
+    -  → Private
+    +  → Public
 ```
+- Die Klassen üben Assoziationen zu einander aus:
+    - Eine Klasse kennt, bzw. verwendet eine andere, besitzt sie aber nicht dauerhaft
+
+## **Warum haben wir uns für das Spiel entschieden?**
+Wooden Solitär war das einzige, von denen zu uns verfügbaren Spielen, die uns schon bekannt waren. Dementsprechend waren wir schon mit den Regeln vertraut, was beim erstellen der digitalen Version von Vorteil war.
+    
 ## **Autoren**
 
 - **Finn Späh**
@@ -125,11 +132,12 @@ Du kannst das Spiel jederzeit mit dem Befehl `exit` verlassen.
 
 ## ⏲️ Version History:
 ```
+- v1.4.1: UML-Erweiterung
 - v1.4: UML-Diagramm, Formatierung
 - v1.3.1: Dokumentation erweitert
 - v1.3: Input Erweiterung
 - v1.2.2: Syntax Fixed
-- v1.2.1: Code Cleanup und ReadMe erweiterung
+- v1.2.1: Code Cleanup und ReadMe Erweiterung
 - v1.1: Zug- und Bälle Counter hinzugefügt
 - v1.0: Initial commit
 ```
