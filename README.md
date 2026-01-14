@@ -1,7 +1,14 @@
 #  **Wooden Solitaire**
 
+
 Ein klassisches **Solitaire** Spiel, in Java/BlueJ für die Konsole.
 Informatik Projekt der K1 von Henry Horlebein, Finn Späh und Aiden Kurz-Feuerstein.
+## Inhaltsverzeichnis
+- [Über das Spiel](#über-das-spiel)
+- [Spiel starten](#spiel-starten)
+- [Spielanleitung](#spielanleitung)
+- [UML-Klassendiagramm](#uml-klassendiagramm)
+- [Version History](#version-history)
 
 ##  **Über das Spiel**
 
@@ -130,8 +137,9 @@ Wooden Solitär war das einzige, von denen zu uns verfügbaren Spielen, die uns 
 
 ---
 
-## ⏲️ Version History:
+ ## Version History:
 ```
+- v1.5: Inhaltsverzeichnis
 - v1.4.1: UML-Erweiterung
 - v1.4: UML-Diagramm, Formatierung
 - v1.3.1: Dokumentation erweitert
