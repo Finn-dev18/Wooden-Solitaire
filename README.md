@@ -81,35 +81,35 @@ Du kannst das Spiel jederzeit mit dem Befehl `exit` verlassen.
         ┌──────────────────┼──────────────────┐
         │                  │                  │
         ▼                  ▼                  ▼
-┌──────────────┐   ┌──────────────┐   ┌───────────────────┐
-│    Board     │   │ MoveValidator│   │       Input       │
-├──────────────┤   ├──────────────┤   ├───────────────────┤
-│ - field[][]  │   │              │   │    - scanner      │
-├──────────────┤   ├──────────────┤   ├───────────────────┤
-│ + get()      │   │ + isValid()  │   │ + getUserInput()  │
-│ + set()      │   └──────────────┘   │     + parse()     │
-│ + print()    │                      └───────────┬───────┘
-└──────┬───────┘                                  │
-       │                                          ▼
-       │                                   ┌──────────────┐
-       │                                   │     Move     │   ← Klassenname
-       │                                   ├──────────────┤
-       │                                   │ - fromRow    │
-       │                                   │ - fromCol    │   ← Attribute (Daten)
-       │                                   │ - toRow      │
-       │                                   │ - toCol      │
-       │                                   ├──────────────┤
-       │                                   │ + Getter     │   ← Methoden
-       │                                   └──────────────┘
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│    Board     │   │ MoveValidator│   │     Input    │
+├──────────────┤   ├──────────────┤   ├──────────────┤
+│ - field[][]  │   │              │   │ - scanner    │
+├──────────────┤   ├──────────────┤   ├──────────────┤
+│ + get()      │   │ + isValid()  │   │ + getUserInput() │
+│ + set()      │   └──────────────┘   │ + parse()    │
+│ + print()    │                      └──────┬───────┘
+└──────┬───────┘                             │
+       │                                     ▼
+       │                             ┌──────────────┐
+       │                             │     Move     │   ← Klassenname
+       │                             ├──────────────┤
+       │                             │ - fromRow    │
+       │                             │ - fromCol    │   ← Attribute (Daten)
+       │                             │ - toRow      │
+       │                             │ - toCol      │
+       │                             ├──────────────┤
+       │                             │ + Getter     │   ← Methoden
+       │                             └──────────────┘
        │
        ▼
-┌──────────────────┐
-│    GameStatus    │
-├──────────────────┤
-│                  │
-├──────────────────┤
+┌──────────────┐
+│  GameStatus  │
+├──────────────┤
+│              │
+├──────────────┤
 │ + hasMovesLeft() │
-└──────────────────┘
+└──────────────┘
 ```
 ```
 - -> Private
@@ -125,7 +125,6 @@ Du kannst das Spiel jederzeit mit dem Befehl `exit` verlassen.
 
 ## ⏲️ Version History:
 ```
-- v1.4: UML-Diagramm, Formatierung
 - v1.3.1: Dokumentation erweitert
 - v1.3: Input Erweiterung
 - v1.2.2: Syntax Fixed
