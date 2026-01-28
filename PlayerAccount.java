@@ -5,15 +5,21 @@ public class PlayerAccount {
     private final String name;
     private int credits;
     private int hammerCount;
+    private int slideCount;
 
     public PlayerAccount(String name) {
         this(name, 0, 0);
     }
 
     public PlayerAccount(String name, int credits, int hammerCount) {
+        this(name, credits, hammerCount, 0);
+    }
+
+    public PlayerAccount(String name, int credits, int hammerCount, int slideCount) {
         this.name = name;
         this.credits = Math.max(0, credits);
         this.hammerCount = Math.max(0, hammerCount);
+        this.slideCount = Math.max(0, slideCount);
     }
 
     public String getName() {
@@ -26,6 +32,10 @@ public class PlayerAccount {
 
     public int getHammerCount() {
         return hammerCount;
+    }
+
+    public int getSlideCount() {
+        return slideCount;
     }
 
     public void addCredits(int amount) {
@@ -56,6 +66,20 @@ public class PlayerAccount {
             return false;
         }
         hammerCount--;
+        return true;
+    }
+
+    public void addSlide(int amount) {
+        if (amount > 0) {
+            slideCount += amount;
+        }
+    }
+
+    public boolean useSlide() {
+        if (slideCount <= 0) {
+            return false;
+        }
+        slideCount--;
         return true;
     }
 
