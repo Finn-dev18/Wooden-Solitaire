@@ -1,6 +1,6 @@
 public class Board {
 
-    private char[][] field = {
+    private final char[][] initialField = {
             {' ', ' ', '●', '●', '●', ' ', ' '},
             {' ', ' ', '●', '●', '●', ' ', ' '},
             {'●', '●', '●', '●', '●', '●', '●'},
@@ -9,6 +9,8 @@ public class Board {
             {' ', ' ', '●', '●', '●', ' ', ' '},
             {' ', ' ', '●', '●', '●', ' ', ' '}
     };
+
+    private char[][] field = copyField(initialField);
 
     public char[][] getField() {
         return field;
@@ -20,6 +22,18 @@ public class Board {
 
     public void set(int r, int c, char value) {
         field[r][c] = value;
+    }
+
+    public void reset() {
+        field = copyField(initialField);
+    }
+
+    private char[][] copyField(char[][] source) {
+        char[][] copy = new char[source.length][];
+        for (int i = 0; i < source.length; i++) {
+            copy[i] = source[i].clone();
+        }
+        return copy;
     }
 
     public int countPegs() {
