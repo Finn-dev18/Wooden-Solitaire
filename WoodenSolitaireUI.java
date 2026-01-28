@@ -10,8 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -31,6 +30,8 @@ public class WoodenSolitaireUI extends JFrame {
     private static final Color COLOR_ACCENT = new Color(140, 94, 60);
     private static final Color COLOR_PEG = new Color(60, 60, 60);
     private static final Color COLOR_EMPTY = new Color(230, 225, 220);
+    private static final Color COLOR_HIGHLIGHT = new Color(255, 236, 140);
+    private static final Color COLOR_VALID_TARGET = new Color(184, 225, 181);
 
     private final Board board = new Board();
     private final MoveValidator validator = new MoveValidator();
@@ -41,6 +42,8 @@ public class WoodenSolitaireUI extends JFrame {
     private PlayerAccount currentPlayer;
     private Instant startTime;
     private int moveCount;
+    private int selectedRow = -1;
+    private int selectedCol = -1;
 
     private final JLabel playerValue = new JLabel("-");
     private final JLabel timeValue = new JLabel("00:00");
@@ -52,6 +55,7 @@ public class WoodenSolitaireUI extends JFrame {
     private final JButton submitButton = new JButton("Zug ausführen");
     private final JTextField moveField = new JTextField();
     private final JButton[][] cells = new JButton[7][7];
+    private final Timer timer = new Timer(1000, event -> updateStats());
 
     private final DefaultTableModel leaderboardModel = new DefaultTableModel(
             new Object[]{"Spieler", "Punkte", "Zeit", "Restkugeln"}, 0) {
@@ -65,7 +69,9 @@ public class WoodenSolitaireUI extends JFrame {
         super("Wooden Solitaire");
         configureLookAndFeel();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(920, 720);
+        setSize(1920, 1080);
+        setMinimumSize(new Dimension(1920, 1080));
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(16, 16));
         getContentPane().setBackground(COLOR_BG);
@@ -77,6 +83,7 @@ public class WoodenSolitaireUI extends JFrame {
         updateBoard();
         updateStats();
         setGameControlsEnabled(false);
+        timer.start();
     }
 
     private void configureLookAndFeel() {
@@ -116,22 +123,24 @@ public class WoodenSolitaireUI extends JFrame {
     }
 
     private JPanel buildBoardPanel() {
-        JPanel boardPanel = new JPanel(new GridLayout(7, 7, 6, 6));
+        JPanel boardPanel = new JPanel(new GridLayout(7, 7, 10, 10));
         boardPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(COLOR_ACCENT, 2),
-                new EmptyBorder(16, 16, 16, 16)));
+                new EmptyBorder(24, 24, 24, 24)));
         boardPanel.setBackground(COLOR_PANEL);
 
-        Font cellFont = new Font("SansSerif", Font.BOLD, 22);
+        Font cellFont = new Font("SansSerif", Font.BOLD, 26);
         for (int r = 0; r < 7; r++) {
             for (int c = 0; c < 7; c++) {
+                final int row = r;
+                final int col = c;
                 JButton cell = new JButton();
                 cell.setFont(cellFont);
                 cell.setFocusable(false);
                 cell.setBackground(COLOR_EMPTY);
-                cell.setPreferredSize(new Dimension(64, 64));
-                cell.setBorder(BorderFactory.createLineBorder(new Color(210, 200, 190)));
-                cell.setEnabled(false);
+                cell.setPreferredSize(new Dimension(90, 90));
+                cell.setBorder(BorderFactory.createLineBorder(new Color(210, 200, 190), 2));
+                cell.addActionListener(e -> handleCellClick(row, col));
                 cells[r][c] = cell;
                 boardPanel.add(cell);
             }
@@ -146,7 +155,7 @@ public class WoodenSolitaireUI extends JFrame {
         movePanel.setBorder(new EmptyBorder(12, 16, 12, 16));
         movePanel.setLayout(new BoxLayout(movePanel, BoxLayout.X_AXIS));
 
-        JLabel moveLabel = new JLabel("Zug (z.B. E4 E6):");
+        JLabel moveLabel = new JLabel("Zug (optional):");
         moveLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
         moveField.setMaximumSize(new Dimension(180, 32));
@@ -313,6 +322,8 @@ public class WoodenSolitaireUI extends JFrame {
         board.reset();
         moveCount = 0;
         startTime = Instant.now();
+        selectedRow = -1;
+        selectedCol = -1;
         statusValue.setText("Spiel gestartet. Viel Erfolg!");
         moveField.setText("");
         updateBoard();
@@ -337,23 +348,11 @@ public class WoodenSolitaireUI extends JFrame {
             statusValue.setText("Ungültiger Zug. Bitte erneut versuchen.");
             return;
         }
-        int fr = move.getFromRow();
-        int fc = move.getFromCol();
-        int tr = move.getToRow();
-        int tc = move.getToCol();
-
-        board.set(fr, fc, '○');
-        board.set((fr + tr) / 2, (fc + tc) / 2, '○');
-        board.set(tr, tc, '●');
-        moveCount++;
+        selectedRow = -1;
+        selectedCol = -1;
+        applyMove(move);
         moveField.setText("");
         updateBoard();
-
-        if (!status.hasMovesLeft(board, validator)) {
-            finishGame();
-        } else {
-            updateStats();
-        }
     }
 
     private void finishGame() {
@@ -389,8 +388,12 @@ public class WoodenSolitaireUI extends JFrame {
                     cell.setText("");
                     cell.setBackground(COLOR_PANEL);
                 }
+                if (r == selectedRow && c == selectedCol) {
+                    cell.setBackground(COLOR_HIGHLIGHT);
+                }
             }
         }
+        highlightValidTargets();
     }
 
     private void updateStats() {
@@ -431,5 +434,84 @@ public class WoodenSolitaireUI extends JFrame {
         newGameButton.setEnabled(enabled);
         submitButton.setEnabled(enabled);
         moveField.setEnabled(enabled);
+        for (int r = 0; r < 7; r++) {
+            for (int c = 0; c < 7; c++) {
+                cells[r][c].setEnabled(enabled);
+            }
+        }
+        if (!enabled) {
+            selectedRow = -1;
+            selectedCol = -1;
+            updateBoard();
+        }
+    }
+
+    private void handleCellClick(int row, int col) {
+        if (currentPlayer == null) {
+            statusValue.setText("Bitte zuerst einen Spieler wählen.");
+            return;
+        }
+        if (startTime == null) {
+            startTime = Instant.now();
+        }
+        char value = board.get(row, col);
+        if (selectedRow == -1 && value == '●') {
+            selectedRow = row;
+            selectedCol = col;
+            statusValue.setText("Kugel ausgewählt. Zielkugel anklicken.");
+            updateBoard();
+            return;
+        }
+        if (selectedRow != -1) {
+            Move move = new Move(selectedRow, selectedCol, row, col);
+            if (validator.isValid(board, move)) {
+                applyMove(move);
+                selectedRow = -1;
+                selectedCol = -1;
+                updateBoard();
+                return;
+            }
+            if (value == '●') {
+                selectedRow = row;
+                selectedCol = col;
+                statusValue.setText("Kugel gewechselt. Ziel wählen.");
+                updateBoard();
+                return;
+            }
+            statusValue.setText("Ungültiger Zug. Ziel erneut wählen.");
+            updateBoard();
+        }
+    }
+
+    private void applyMove(Move move) {
+        int fr = move.getFromRow();
+        int fc = move.getFromCol();
+        int tr = move.getToRow();
+        int tc = move.getToCol();
+
+        board.set(fr, fc, '○');
+        board.set((fr + tr) / 2, (fc + tc) / 2, '○');
+        board.set(tr, tc, '●');
+        moveCount++;
+
+        if (!status.hasMovesLeft(board, validator)) {
+            finishGame();
+        } else {
+            updateStats();
+        }
+    }
+
+    private void highlightValidTargets() {
+        if (selectedRow == -1) {
+            return;
+        }
+        for (int r = 0; r < 7; r++) {
+            for (int c = 0; c < 7; c++) {
+                Move move = new Move(selectedRow, selectedCol, r, c);
+                if (validator.isValid(board, move)) {
+                    cells[r][c].setBackground(COLOR_VALID_TARGET);
+                }
+            }
+        }
     }
 }
