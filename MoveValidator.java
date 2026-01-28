@@ -10,8 +10,6 @@ public class MoveValidator {
             return false;
   
         if (board.get(fr, fc) != '●') return false;
-
-
         if (board.get(tr, tc) != '○') return false;
 
         if (Math.abs(fr - tr) == 2 && fc == tc) {
