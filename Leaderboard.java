@@ -19,11 +19,6 @@ public class Leaderboard {
 
     public Leaderboard() {
         load();
-        if (players.isEmpty()) {
-            ensurePlayer("Holzspieler");
-            ensurePlayer("Strategin");
-            save();
-        }
     }
 
     public PlayerAccount ensurePlayer(String name) {
@@ -76,6 +71,8 @@ public class Leaderboard {
                     .append(player.getCredits())
                     .append(",\"hammer\":")
                     .append(player.getHammerCount())
+                    .append(",\"slide\":")
+                    .append(player.getSlideCount())
                     .append("}");
             index++;
         }
@@ -111,13 +108,14 @@ public class Leaderboard {
         }
         try {
             String json = Files.readString(STORAGE_PATH);
-            Pattern playerPattern = Pattern.compile("\\{\\s*\"name\"\\s*:\\s*\"(.*?)\"\\s*,\\s*\"credits\"\\s*:\\s*(\\d+)\\s*,\\s*\"hammer\"\\s*:\\s*(\\d+)\\s*\\}");
+            Pattern playerPattern = Pattern.compile("\\{\\s*\"name\"\\s*:\\s*\"(.*?)\"\\s*,\\s*\"credits\"\\s*:\\s*(\\d+)\\s*,\\s*\"hammer\"\\s*:\\s*(\\d+)(?:\\s*,\\s*\"slide\"\\s*:\\s*(\\d+))?\\s*\\}");
             Matcher playerMatcher = playerPattern.matcher(json);
             while (playerMatcher.find()) {
                 String name = unescape(playerMatcher.group(1));
                 int credits = Integer.parseInt(playerMatcher.group(2));
                 int hammerCount = Integer.parseInt(playerMatcher.group(3));
-                players.put(name.toLowerCase(), new PlayerAccount(name, credits, hammerCount));
+                int slideCount = playerMatcher.group(4) == null ? 0 : Integer.parseInt(playerMatcher.group(4));
+                players.put(name.toLowerCase(), new PlayerAccount(name, credits, hammerCount, slideCount));
             }
             Pattern entryPattern = Pattern.compile("\\{\\s*\"player\"\\s*:\\s*\"(.*?)\"\\s*,\\s*\"score\"\\s*:\\s*(\\d+)\\s*,\\s*\"durationSeconds\"\\s*:\\s*(\\d+)\\s*,\\s*\"remainingPegs\"\\s*:\\s*(\\d+)\\s*\\}");
             Matcher entryMatcher = entryPattern.matcher(json);
@@ -139,6 +137,15 @@ public class Leaderboard {
 
     private String unescape(String value) {
         return value.replace("\\\"", "\"").replace("\\\\", "\\");
+    }
+
+    public void removePlayer(String name) {
+        if (name == null) {
+            return;
+        }
+        players.remove(name.toLowerCase());
+        entries.removeIf(entry -> entry.playerName().equalsIgnoreCase(name));
+        save();
     }
 
     public record Entry(String playerName, int score, Duration duration, int remainingPegs) {
