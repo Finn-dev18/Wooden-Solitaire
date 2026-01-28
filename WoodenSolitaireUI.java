@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -89,6 +90,7 @@ public class WoodenSolitaireUI extends JFrame {
     private Timer creditFlashTimer;
     private boolean animationInProgress;
     private boolean hammerArmed;
+    private boolean gameOver;
 
     private static final int HAMMER_COST = 8;
     private static final int SLIDE_COST = 12;
@@ -484,9 +486,12 @@ public class WoodenSolitaireUI extends JFrame {
         selectedRow = -1;
         selectedCol = -1;
         hammerArmed = false;
+        gameOver = false;
         creditEventValue.setText("Noch keine Gutschrift.");
         statusValue.setText("Spiel gestartet. Viel Erfolg!");
         moveField.setText("");
+        setGameplayEnabled(true);
+        updatePowerupPanel();
         updateBoard();
         updateStats();
     }
@@ -494,6 +499,10 @@ public class WoodenSolitaireUI extends JFrame {
     private void handleMove() {
         if (currentPlayer == null) {
             statusValue.setText("Bitte zuerst einen Spieler wählen.");
+            return;
+        }
+        if (gameOver) {
+            statusValue.setText("Spiel ist beendet. Bitte neues Spiel starten.");
             return;
         }
         if (startTime == null) {
@@ -524,6 +533,9 @@ public class WoodenSolitaireUI extends JFrame {
 
         statusValue.setText("Spiel vorbei! Ergebnis gespeichert.");
         scoreValue.setText(String.valueOf(score));
+        gameOver = true;
+        hammerArmed = false;
+        setGameplayEnabled(false);
 
         if (currentPlayer != null) {
             int creditsEarned = ScoreCalculator.calculateCredits(score);
@@ -611,6 +623,15 @@ public class WoodenSolitaireUI extends JFrame {
 
     private void setGameControlsEnabled(boolean enabled) {
         newGameButton.setEnabled(enabled);
+        setGameplayEnabled(enabled && !gameOver);
+        if (!enabled) {
+            selectedRow = -1;
+            selectedCol = -1;
+            updateBoard();
+        }
+    }
+
+    private void setGameplayEnabled(boolean enabled) {
         submitButton.setEnabled(enabled);
         moveField.setEnabled(enabled);
         buyHammerButton.setEnabled(enabled);
@@ -619,13 +640,8 @@ public class WoodenSolitaireUI extends JFrame {
         useSlideButton.setEnabled(enabled);
         for (int r = 0; r < 7; r++) {
             for (int c = 0; c < 7; c++) {
-                cells[r][c].setEnabled(enabled);
+                cells[r][c].setEnabled(enabled && board.get(r, c) != ' ');
             }
-        }
-        if (!enabled) {
-            selectedRow = -1;
-            selectedCol = -1;
-            updateBoard();
         }
     }
 
@@ -635,6 +651,10 @@ public class WoodenSolitaireUI extends JFrame {
         }
         if (currentPlayer == null) {
             statusValue.setText("Bitte zuerst einen Spieler wählen.");
+            return;
+        }
+        if (gameOver) {
+            statusValue.setText("Spiel ist beendet. Bitte neues Spiel starten.");
             return;
         }
         if (hammerArmed) {
@@ -764,7 +784,7 @@ public class WoodenSolitaireUI extends JFrame {
     private void setBoardInteractionEnabled(boolean enabled) {
         for (int r = 0; r < 7; r++) {
             for (int c = 0; c < 7; c++) {
-                cells[r][c].setEnabled(enabled);
+                cells[r][c].setEnabled(enabled && board.get(r, c) != ' ');
             }
         }
         submitButton.setEnabled(enabled);
@@ -790,15 +810,20 @@ public class WoodenSolitaireUI extends JFrame {
         creditsValue.setText(String.valueOf(currentPlayer.getCredits()));
         hammerCountValue.setText(String.valueOf(currentPlayer.getHammerCount()));
         slideCountValue.setText(String.valueOf(currentPlayer.getSlideCount()));
-        buyHammerButton.setEnabled(true);
-        useHammerButton.setEnabled(currentPlayer.getHammerCount() > 0);
-        buySlideButton.setEnabled(true);
-        useSlideButton.setEnabled(currentPlayer.getSlideCount() > 0);
+        boolean allowPowerups = !gameOver;
+        buyHammerButton.setEnabled(allowPowerups);
+        useHammerButton.setEnabled(allowPowerups && currentPlayer.getHammerCount() > 0);
+        buySlideButton.setEnabled(allowPowerups);
+        useSlideButton.setEnabled(allowPowerups && currentPlayer.getSlideCount() > 0);
     }
 
     private void buyHammer() {
         if (currentPlayer == null) {
             statusValue.setText("Bitte zuerst einen Spieler wählen.");
+            return;
+        }
+        if (gameOver) {
+            statusValue.setText("Spiel ist beendet. Keine Powerups mehr verfügbar.");
             return;
         }
         if (!currentPlayer.spendCredits(HAMMER_COST)) {
@@ -817,6 +842,10 @@ public class WoodenSolitaireUI extends JFrame {
             statusValue.setText("Bitte zuerst einen Spieler wählen.");
             return;
         }
+        if (gameOver) {
+            statusValue.setText("Spiel ist beendet. Keine Powerups mehr verfügbar.");
+            return;
+        }
         if (!currentPlayer.spendCredits(SLIDE_COST)) {
             statusValue.setText("Nicht genug Credits für den Randsturm.");
             updatePowerupPanel();
@@ -833,6 +862,10 @@ public class WoodenSolitaireUI extends JFrame {
             statusValue.setText("Bitte zuerst einen Spieler wählen.");
             return;
         }
+        if (gameOver) {
+            statusValue.setText("Spiel ist beendet. Keine Powerups mehr verfügbar.");
+            return;
+        }
         if (currentPlayer.getHammerCount() <= 0) {
             statusValue.setText("Kein Hammer verfügbar.");
             return;
@@ -844,6 +877,11 @@ public class WoodenSolitaireUI extends JFrame {
     private void useHammerOnCell(int row, int col) {
         if (currentPlayer == null) {
             hammerArmed = false;
+            return;
+        }
+        if (gameOver) {
+            hammerArmed = false;
+            statusValue.setText("Spiel ist beendet. Keine Powerups mehr verfügbar.");
             return;
         }
         if (board.get(row, col) != '●') {
@@ -903,6 +941,10 @@ public class WoodenSolitaireUI extends JFrame {
     private void useSlidePowerup() {
         if (currentPlayer == null) {
             statusValue.setText("Bitte zuerst einen Spieler wählen.");
+            return;
+        }
+        if (gameOver) {
+            statusValue.setText("Spiel ist beendet. Keine Powerups mehr verfügbar.");
             return;
         }
         if (animationInProgress) {
@@ -990,32 +1032,42 @@ public class WoodenSolitaireUI extends JFrame {
         char[][] result = new char[7][7];
         for (int r = 0; r < 7; r++) {
             for (int c = 0; c < 7; c++) {
-                result[r][c] = '○';
+                result[r][c] = source[r][c] == ' ' ? ' ' : '○';
             }
         }
         if (direction == Direction.LEFT || direction == Direction.RIGHT) {
             for (int r = 0; r < 7; r++) {
+                List<Integer> playableCols = new ArrayList<>();
                 int count = 0;
                 for (int c = 0; c < 7; c++) {
+                    if (source[r][c] != ' ') {
+                        playableCols.add(c);
+                    }
                     if (source[r][c] == '●') {
                         count++;
                     }
                 }
                 for (int i = 0; i < count; i++) {
-                    int col = direction == Direction.LEFT ? i : 6 - i;
+                    int colIndex = direction == Direction.LEFT ? i : playableCols.size() - 1 - i;
+                    int col = playableCols.get(colIndex);
                     result[r][col] = '●';
                 }
             }
         } else {
             for (int c = 0; c < 7; c++) {
+                List<Integer> playableRows = new ArrayList<>();
                 int count = 0;
                 for (int r = 0; r < 7; r++) {
+                    if (source[r][c] != ' ') {
+                        playableRows.add(r);
+                    }
                     if (source[r][c] == '●') {
                         count++;
                     }
                 }
                 for (int i = 0; i < count; i++) {
-                    int row = direction == Direction.TOP ? i : 6 - i;
+                    int rowIndex = direction == Direction.TOP ? i : playableRows.size() - 1 - i;
+                    int row = playableRows.get(rowIndex);
                     result[row][c] = '●';
                 }
             }
