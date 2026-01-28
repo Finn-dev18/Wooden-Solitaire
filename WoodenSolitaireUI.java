@@ -19,6 +19,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.event.ActionListener;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -54,8 +55,17 @@ public class WoodenSolitaireUI extends JFrame {
     private final JButton newGameButton = new JButton("Neues Spiel");
     private final JButton submitButton = new JButton("Zug ausführen");
     private final JTextField moveField = new JTextField();
+    private final JLabel creditsValue = new JLabel("0");
+    private final JLabel hammerCountValue = new JLabel("0");
+    private final JButton buyHammerButton = new JButton("Kaufen");
+    private final JButton useHammerButton = new JButton("Nutzen");
     private final JButton[][] cells = new JButton[7][7];
     private final Timer timer = new Timer(1000, event -> updateStats());
+    private Timer animationTimer;
+    private boolean animationInProgress;
+    private boolean hammerArmed;
+
+    private static final int HAMMER_COST = 8;
 
     private final DefaultTableModel leaderboardModel = new DefaultTableModel(
             new Object[]{"Spieler", "Punkte", "Zeit", "Restkugeln"}, 0) {
@@ -117,8 +127,8 @@ public class WoodenSolitaireUI extends JFrame {
         center.setBackground(COLOR_BG);
         center.setBorder(new EmptyBorder(0, 16, 16, 0));
 
+        center.add(buildPowerupsPanel(), BorderLayout.WEST);
         center.add(buildBoardPanel(), BorderLayout.CENTER);
-        center.add(buildMovePanel(), BorderLayout.SOUTH);
         return center;
     }
 
@@ -149,31 +159,68 @@ public class WoodenSolitaireUI extends JFrame {
         return boardPanel;
     }
 
-    private JPanel buildMovePanel() {
-        JPanel movePanel = new JPanel();
-        movePanel.setBackground(COLOR_PANEL);
-        movePanel.setBorder(new EmptyBorder(12, 16, 12, 16));
-        movePanel.setLayout(new BoxLayout(movePanel, BoxLayout.X_AXIS));
+    private JPanel buildPowerupsPanel() {
+        JPanel powerups = new JPanel();
+        powerups.setLayout(new BoxLayout(powerups, BoxLayout.Y_AXIS));
+        powerups.setBackground(COLOR_PANEL);
+        powerups.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        JLabel moveLabel = new JLabel("Zug (optional):");
-        moveLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        JLabel title = new JLabel("Powerups");
+        title.setFont(new Font("SansSerif", Font.BOLD, 16));
+        title.setAlignmentX(LEFT_ALIGNMENT);
+        powerups.add(title);
+        powerups.add(Box.createVerticalStrut(12));
 
-        moveField.setMaximumSize(new Dimension(180, 32));
-        moveField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        JPanel creditsRow = new JPanel(new BorderLayout());
+        creditsRow.setBackground(COLOR_PANEL);
+        JLabel creditsLabel = new JLabel("Credits:");
+        creditsLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        creditsRow.add(creditsLabel, BorderLayout.WEST);
+        creditsValue.setFont(new Font("SansSerif", Font.BOLD, 12));
+        creditsRow.add(creditsValue, BorderLayout.EAST);
+        creditsRow.setAlignmentX(LEFT_ALIGNMENT);
+        powerups.add(creditsRow);
+        powerups.add(Box.createVerticalStrut(16));
 
-        submitButton.addActionListener(e -> handleMove());
-        submitButton.setBackground(COLOR_ACCENT);
-        submitButton.setForeground(Color.WHITE);
-        submitButton.setFocusPainted(false);
+        JLabel hammerTitle = new JLabel("Hammer");
+        hammerTitle.setFont(new Font("SansSerif", Font.BOLD, 13));
+        hammerTitle.setAlignmentX(LEFT_ALIGNMENT);
+        powerups.add(hammerTitle);
 
-        movePanel.add(moveLabel);
-        movePanel.add(Box.createHorizontalStrut(12));
-        movePanel.add(moveField);
-        movePanel.add(Box.createHorizontalStrut(12));
-        movePanel.add(submitButton);
-        movePanel.add(Box.createHorizontalGlue());
+        JLabel hammerDescription = new JLabel("Zerstört eine Kugel auf dem Feld.");
+        hammerDescription.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        hammerDescription.setForeground(new Color(90, 90, 90));
+        hammerDescription.setAlignmentX(LEFT_ALIGNMENT);
+        powerups.add(hammerDescription);
+        powerups.add(Box.createVerticalStrut(6));
 
-        return movePanel;
+        JPanel hammerCountRow = new JPanel(new BorderLayout());
+        hammerCountRow.setBackground(COLOR_PANEL);
+        JLabel countLabel = new JLabel("Verfügbar:");
+        countLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        hammerCountRow.add(countLabel, BorderLayout.WEST);
+        hammerCountValue.setFont(new Font("SansSerif", Font.BOLD, 12));
+        hammerCountRow.add(hammerCountValue, BorderLayout.EAST);
+        hammerCountRow.setAlignmentX(LEFT_ALIGNMENT);
+        powerups.add(hammerCountRow);
+
+        JLabel costLabel = new JLabel("Kosten: " + HAMMER_COST + " Credits");
+        costLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        costLabel.setForeground(new Color(90, 90, 90));
+        costLabel.setAlignmentX(LEFT_ALIGNMENT);
+        powerups.add(Box.createVerticalStrut(6));
+        powerups.add(costLabel);
+
+        buyHammerButton.setAlignmentX(LEFT_ALIGNMENT);
+        buyHammerButton.addActionListener(e -> buyHammer());
+        useHammerButton.setAlignmentX(LEFT_ALIGNMENT);
+        useHammerButton.addActionListener(e -> armHammer());
+        powerups.add(Box.createVerticalStrut(8));
+        powerups.add(buyHammerButton);
+        powerups.add(Box.createVerticalStrut(6));
+        powerups.add(useHammerButton);
+
+        return powerups;
     }
 
     private JPanel buildSidebar() {
@@ -294,6 +341,7 @@ public class WoodenSolitaireUI extends JFrame {
     private void selectPlayer(PlayerAccount player) {
         currentPlayer = player;
         playerValue.setText(player == null ? "-" : player.getName());
+        updatePowerupPanel();
         setGameControlsEnabled(player != null);
     }
 
@@ -324,6 +372,7 @@ public class WoodenSolitaireUI extends JFrame {
         startTime = Instant.now();
         selectedRow = -1;
         selectedCol = -1;
+        hammerArmed = false;
         statusValue.setText("Spiel gestartet. Viel Erfolg!");
         moveField.setText("");
         updateBoard();
@@ -365,13 +414,28 @@ public class WoodenSolitaireUI extends JFrame {
         scoreValue.setText(String.valueOf(score));
 
         if (currentPlayer != null) {
+            int creditsEarned = ScoreCalculator.calculateCredits(score);
+            if (creditsEarned > 0) {
+                currentPlayer.addCredits(creditsEarned);
+            }
             leaderboard.recordScore(currentPlayer.getName(), score, duration, remaining);
+            leaderboard.save();
             refreshLeaderboard();
+            updatePowerupPanel();
+            JOptionPane.showMessageDialog(this,
+                    "Spiel beendet!\nPunkte: " + score +
+                            "\nRestkugeln: " + remaining +
+                            "\nCredits erhalten: " + creditsEarned,
+                    "Game Over",
+                    JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     private void updateBoard() {
-        char[][] field = board.getField();
+        renderField(board.getField(), true);
+    }
+
+    private void renderField(char[][] field, boolean showTargets) {
         for (int r = 0; r < 7; r++) {
             for (int c = 0; c < 7; c++) {
                 JButton cell = cells[r][c];
@@ -393,7 +457,9 @@ public class WoodenSolitaireUI extends JFrame {
                 }
             }
         }
-        highlightValidTargets();
+        if (showTargets) {
+            highlightValidTargets();
+        }
     }
 
     private void updateStats() {
@@ -434,6 +500,8 @@ public class WoodenSolitaireUI extends JFrame {
         newGameButton.setEnabled(enabled);
         submitButton.setEnabled(enabled);
         moveField.setEnabled(enabled);
+        buyHammerButton.setEnabled(enabled);
+        useHammerButton.setEnabled(enabled);
         for (int r = 0; r < 7; r++) {
             for (int c = 0; c < 7; c++) {
                 cells[r][c].setEnabled(enabled);
@@ -447,8 +515,15 @@ public class WoodenSolitaireUI extends JFrame {
     }
 
     private void handleCellClick(int row, int col) {
+        if (animationInProgress) {
+            return;
+        }
         if (currentPlayer == null) {
             statusValue.setText("Bitte zuerst einen Spieler wählen.");
+            return;
+        }
+        if (hammerArmed) {
+            useHammerOnCell(row, col);
             return;
         }
         if (startTime == null) {
@@ -489,16 +564,7 @@ public class WoodenSolitaireUI extends JFrame {
         int tr = move.getToRow();
         int tc = move.getToCol();
 
-        board.set(fr, fc, '○');
-        board.set((fr + tr) / 2, (fc + tc) / 2, '○');
-        board.set(tr, tc, '●');
-        moveCount++;
-
-        if (!status.hasMovesLeft(board, validator)) {
-            finishGame();
-        } else {
-            updateStats();
-        }
+        animateMove(move);
     }
 
     private void highlightValidTargets() {
@@ -512,6 +578,159 @@ public class WoodenSolitaireUI extends JFrame {
                     cells[r][c].setBackground(COLOR_VALID_TARGET);
                 }
             }
+        }
+    }
+
+    private void animateMove(Move move) {
+        if (animationInProgress) {
+            return;
+        }
+        animationInProgress = true;
+        setBoardInteractionEnabled(false);
+        int fr = move.getFromRow();
+        int fc = move.getFromCol();
+        int tr = move.getToRow();
+        int tc = move.getToCol();
+        int mr = (fr + tr) / 2;
+        int mc = (fc + tc) / 2;
+        char[][] base = copyField(board.getField());
+        int[] steps = {0, 1, 2};
+        final int[] stepIndex = {0};
+
+        ActionListener listener = event -> {
+            char[][] frame = copyField(base);
+            frame[fr][fc] = '○';
+            frame[mr][mc] = '○';
+            frame[tr][tc] = '○';
+            if (steps[stepIndex[0]] == 0) {
+                frame[fr][fc] = '●';
+            } else if (steps[stepIndex[0]] == 1) {
+                frame[mr][mc] = '●';
+            } else {
+                frame[tr][tc] = '●';
+            }
+            renderField(frame, false);
+            stepIndex[0]++;
+            if (stepIndex[0] >= steps.length) {
+                animationTimer.stop();
+                finalizeMove(move);
+                animationInProgress = false;
+                setBoardInteractionEnabled(true);
+                updateBoard();
+            }
+        };
+
+        animationTimer = new Timer(120, listener);
+        animationTimer.start();
+    }
+
+    private void finalizeMove(Move move) {
+        int fr = move.getFromRow();
+        int fc = move.getFromCol();
+        int tr = move.getToRow();
+        int tc = move.getToCol();
+
+        board.set(fr, fc, '○');
+        board.set((fr + tr) / 2, (fc + tc) / 2, '○');
+        board.set(tr, tc, '●');
+        moveCount++;
+
+        if (!status.hasMovesLeft(board, validator)) {
+            finishGame();
+        } else {
+            updateStats();
+        }
+    }
+
+    private char[][] copyField(char[][] source) {
+        char[][] copy = new char[source.length][];
+        for (int i = 0; i < source.length; i++) {
+            copy[i] = source[i].clone();
+        }
+        return copy;
+    }
+
+    private void setBoardInteractionEnabled(boolean enabled) {
+        for (int r = 0; r < 7; r++) {
+            for (int c = 0; c < 7; c++) {
+                cells[r][c].setEnabled(enabled);
+            }
+        }
+        submitButton.setEnabled(enabled);
+        moveField.setEnabled(enabled);
+        newGameButton.setEnabled(enabled);
+        buyHammerButton.setEnabled(enabled);
+        useHammerButton.setEnabled(enabled);
+    }
+
+    private void updatePowerupPanel() {
+        if (currentPlayer == null) {
+            creditsValue.setText("0");
+            hammerCountValue.setText("0");
+            buyHammerButton.setEnabled(false);
+            useHammerButton.setEnabled(false);
+            return;
+        }
+        creditsValue.setText(String.valueOf(currentPlayer.getCredits()));
+        hammerCountValue.setText(String.valueOf(currentPlayer.getHammerCount()));
+        buyHammerButton.setEnabled(true);
+        useHammerButton.setEnabled(currentPlayer.getHammerCount() > 0);
+    }
+
+    private void buyHammer() {
+        if (currentPlayer == null) {
+            statusValue.setText("Bitte zuerst einen Spieler wählen.");
+            return;
+        }
+        if (!currentPlayer.spendCredits(HAMMER_COST)) {
+            statusValue.setText("Nicht genug Credits für den Hammer.");
+            updatePowerupPanel();
+            return;
+        }
+        currentPlayer.addHammer(1);
+        leaderboard.save();
+        statusValue.setText("Hammer gekauft.");
+        updatePowerupPanel();
+    }
+
+    private void armHammer() {
+        if (currentPlayer == null) {
+            statusValue.setText("Bitte zuerst einen Spieler wählen.");
+            return;
+        }
+        if (currentPlayer.getHammerCount() <= 0) {
+            statusValue.setText("Kein Hammer verfügbar.");
+            return;
+        }
+        hammerArmed = true;
+        statusValue.setText("Hammer aktiv: Wähle eine Kugel zum Entfernen.");
+    }
+
+    private void useHammerOnCell(int row, int col) {
+        if (currentPlayer == null) {
+            hammerArmed = false;
+            return;
+        }
+        if (board.get(row, col) != '●') {
+            statusValue.setText("Hier ist keine Kugel. Hammer bleibt aktiv.");
+            return;
+        }
+        if (!currentPlayer.useHammer()) {
+            hammerArmed = false;
+            statusValue.setText("Kein Hammer mehr verfügbar.");
+            updatePowerupPanel();
+            return;
+        }
+        hammerArmed = false;
+        board.set(row, col, '○');
+        leaderboard.save();
+        updatePowerupPanel();
+        updateBoard();
+        updateStats();
+        if (!status.hasMovesLeft(board, validator)) {
+            finishGame();
+        } else {
+            statusValue.setText("Hammer benutzt.");
         }
     }
 }

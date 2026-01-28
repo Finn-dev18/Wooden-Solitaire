@@ -5,7 +5,6 @@ public class Input {
     private Scanner scanner = new Scanner(System.in);
 
     public String getUserInput() {
-        System.out.print("Zug eingeben (z.B. E4 E6 oder 'exit'): ");
         return scanner.nextLine();
     }
 
