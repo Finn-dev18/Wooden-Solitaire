@@ -6,6 +6,7 @@ public class ScoreCalculator {
     private static final int PEG_BONUS = 120;
     private static final int MOVE_PENALTY = 6;
     private static final int TIME_PENALTY_PER_SECOND = 2;
+    private static final int CREDIT_DIVISOR = 200;
 
     private ScoreCalculator() {
     }
@@ -17,5 +18,12 @@ public class ScoreCalculator {
         score -= moveCount * MOVE_PENALTY;
         score -= seconds * TIME_PENALTY_PER_SECOND;
         return Math.max(0, score);
+    }
+
+    public static int calculateCredits(int score) {
+        if (score <= 0) {
+            return 0;
+        }
+        return Math.max(1, score / CREDIT_DIVISOR);
     }
 }
