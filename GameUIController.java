@@ -3,5 +3,6 @@ public interface GameUIController {
     void onModelUpdated();
     void requestMenu();
     void requestRestart();
-    void requestPlayerName();
+    boolean isOverlayActive();
+    OverlayState getOverlayState();
 }

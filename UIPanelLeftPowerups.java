@@ -15,10 +15,10 @@ import java.util.Map;
 public class UIPanelLeftPowerups extends JPanel {
     private static final Color COLOR_TEXT = new Color(43, 253, 223);
     private static final Color COLOR_TEXT_MUTED = new Color(171, 25, 111);
-    private static final int BASE_WIDTH = 220;
+    private static final int BASE_WIDTH = 256;
     private static final int BASE_PADDING = 16;
-    private static final int BASE_BUTTON_WIDTH = 192;
-    private static final int BASE_BUTTON_HEIGHT = 64;
+    private static final int BASE_BUTTON_WIDTH = 260;
+    private static final int BASE_BUTTON_HEIGHT = 72;
     private static final int BASE_ICON_SIZE = 16;
     private static final int BASE_BUY_WIDTH = 56;
     private static final int BASE_BUY_HEIGHT = 26;
@@ -26,7 +26,7 @@ public class UIPanelLeftPowerups extends JPanel {
     private final AssetManager assets;
     private final GameModel model;
     private final GameUIController controller;
-    private double scale = 2;
+    private int scale = 2;
     private PowerupType hovered;
     private PowerupType pressed;
     private PowerupType hoveredBuy;
@@ -42,6 +42,9 @@ public class UIPanelLeftPowerups extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                if (controller.isOverlayActive()) {
+                    return;
+                }
                 pressedBuy = findBuyButton(e.getX(), e.getY());
                 if (pressedBuy == null) {
                     pressed = findButton(e.getX(), e.getY());
@@ -51,6 +54,12 @@ public class UIPanelLeftPowerups extends JPanel {
 
             @Override
             public void mouseReleased(MouseEvent e) {
+                if (controller.isOverlayActive()) {
+                    pressed = null;
+                    pressedBuy = null;
+                    repaint();
+                    return;
+                }
                 PowerupType releasedBuy = findBuyButton(e.getX(), e.getY());
                 if (pressedBuy != null && pressedBuy == releasedBuy) {
                     model.purchasePowerup(releasedBuy);
@@ -77,6 +86,12 @@ public class UIPanelLeftPowerups extends JPanel {
         addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
+                if (controller.isOverlayActive()) {
+                    hovered = null;
+                    hoveredBuy = null;
+                    repaint();
+                    return;
+                }
                 hovered = findButton(e.getX(), e.getY());
                 hoveredBuy = findBuyButton(e.getX(), e.getY());
                 repaint();
@@ -84,8 +99,8 @@ public class UIPanelLeftPowerups extends JPanel {
         });
     }
 
-    public void setScale(double scale) {
-        this.scale = Math.max(1, scale);
+    public void setScale(int scale) {
+        this.scale = Math.max(2, scale);
         setPreferredSize(new Dimension((int) Math.round(BASE_WIDTH * this.scale), 1));
         revalidate();
         repaint();
@@ -115,6 +130,7 @@ public class UIPanelLeftPowerups extends JPanel {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
 
         int padding = (int) Math.round(BASE_PADDING * scale);
         int buttonWidth = (int) Math.round(BASE_BUTTON_WIDTH * scale);
@@ -126,7 +142,8 @@ public class UIPanelLeftPowerups extends JPanel {
         int y = padding;
         float fontScale = (float) (scale / 2.0);
 
-        drawPanelBackground(g2d);
+        g2d.setColor(new Color(21, 16, 68));
+        g2d.fillRect(0, 0, getWidth(), getHeight());
 
         g2d.setColor(COLOR_TEXT);
         g2d.setFont(getFont().deriveFont(Font.BOLD, 16f * fontScale));
@@ -196,12 +213,12 @@ public class UIPanelLeftPowerups extends JPanel {
 
     private BufferedImage getButtonImage(PowerupType type) {
         if (pressed == type) {
-            return assets.getImage("powerup_button_pressed_192x64.png");
+            return assets.getImage("ui_button_pressed_260x72.png");
         }
         if (hovered == type) {
-            return assets.getImage("powerup_button_hover_192x64.png");
+            return assets.getImage("ui_button_hover_260x72.png");
         }
-        return assets.getImage("powerup_button_normal_192x64.png");
+        return assets.getImage("ui_button_normal_260x72.png");
     }
 
     private String getIconName(PowerupType type) {
@@ -221,32 +238,5 @@ public class UIPanelLeftPowerups extends JPanel {
             default:
                 return "icon_hint_16.png";
         }
-    }
-
-    private void drawPanelBackground(Graphics2D g2d) {
-        BufferedImage panel = assets.getImage("panel_9slice_24.png");
-        int slice = panel.getWidth() / 3;
-        int scaledSlice = (int) Math.round(slice * scale);
-        int x = 0;
-        int y = 0;
-        int w = getWidth();
-        int h = getHeight();
-        g2d.drawImage(panel, x, y, x + scaledSlice, y + scaledSlice, 0, 0, slice, slice, null);
-        g2d.drawImage(panel, x + scaledSlice, y, x + w - scaledSlice, y + scaledSlice,
-                slice, 0, panel.getWidth() - slice, slice, null);
-        g2d.drawImage(panel, x + w - scaledSlice, y, x + w, y + scaledSlice,
-                panel.getWidth() - slice, 0, panel.getWidth(), slice, null);
-        g2d.drawImage(panel, x, y + scaledSlice, x + scaledSlice, y + h - scaledSlice,
-                0, slice, slice, panel.getHeight() - slice, null);
-        g2d.drawImage(panel, x + scaledSlice, y + scaledSlice, x + w - scaledSlice, y + h - scaledSlice,
-                slice, slice, panel.getWidth() - slice, panel.getHeight() - slice, null);
-        g2d.drawImage(panel, x + w - scaledSlice, y + scaledSlice, x + w, y + h - scaledSlice,
-                panel.getWidth() - slice, slice, panel.getWidth(), panel.getHeight() - slice, null);
-        g2d.drawImage(panel, x, y + h - scaledSlice, x + scaledSlice, y + h,
-                0, panel.getHeight() - slice, slice, panel.getHeight(), null);
-        g2d.drawImage(panel, x + scaledSlice, y + h - scaledSlice, x + w - scaledSlice, y + h,
-                slice, panel.getHeight() - slice, panel.getWidth() - slice, panel.getHeight(), null);
-        g2d.drawImage(panel, x + w - scaledSlice, y + h - scaledSlice, x + w, y + h,
-                panel.getWidth() - slice, panel.getHeight() - slice, panel.getWidth(), panel.getHeight(), null);
     }
 }

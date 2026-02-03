@@ -5,9 +5,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 
 public class AssetManager {
+    private static final Pattern SIZE_PATTERN = Pattern.compile(".*_(\\d+)x(\\d+)\\.png$");
     private final Map<String, BufferedImage> images = new HashMap<>();
 
     public BufferedImage getImage(String name) {
@@ -22,13 +25,36 @@ public class AssetManager {
     private BufferedImage loadImage(String name) {
         File file = new File("assets", name);
         if (!file.exists()) {
-            return createPlaceholder(32, 32, new Color(252, 16, 87));
+            return createPlaceholderForName(name);
         }
         try {
-            return ImageIO.read(file);
+            BufferedImage image = ImageIO.read(file);
+            if (image == null) {
+                return createPlaceholderForName(name);
+            }
+            return image;
         } catch (IOException e) {
-            return createPlaceholder(32, 32, new Color(252, 16, 87));
+            return createPlaceholderForName(name);
         }
+    }
+
+    private BufferedImage createPlaceholderForName(String name) {
+        int[] size = parseSize(name);
+        return createPlaceholder(size[0], size[1], new Color(252, 16, 87));
+    }
+
+    private int[] parseSize(String name) {
+        Matcher matcher = SIZE_PATTERN.matcher(name);
+        if (matcher.matches()) {
+            try {
+                int width = Integer.parseInt(matcher.group(1));
+                int height = Integer.parseInt(matcher.group(2));
+                return new int[]{width, height};
+            } catch (NumberFormatException ignored) {
+                return new int[]{32, 32};
+            }
+        }
+        return new int[]{32, 32};
     }
 
     public BufferedImage createPlaceholder(int width, int height, Color color) {
