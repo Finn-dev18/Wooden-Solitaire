@@ -1,3 +1,4 @@
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
@@ -16,6 +17,9 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final int BASE_RIGHT_WIDTH = 260;
     private static final int BASE_BOARD = 512;
     private static final int BASE_HEIGHT = 560;
+    private static final String ASSET_DIALOG_MENU = "menu_dialog_480x240.png";
+    private static final String ASSET_DIALOG_INPUT = "input_dialog_480x240.png";
+    private static final String ASSET_DIALOG_GAME_OVER = "game_over_dialog_480x240.png";
 
     private final AssetManager assets = new AssetManager();
     private final GameModel model = new GameModel();
@@ -118,7 +122,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
 
     @Override
     public void requestMenu() {
-        int result = showOptionDialog("Menü", "Menu", new String[]{"Resume", "New Game", "Quit"}, "Resume");
+        int result = showOptionDialog("Menü", "Menu", new String[]{"Resume", "New Game", "Quit"}, "Resume", ASSET_DIALOG_MENU);
         if (result == 1) {
             model.resetGame();
             gameOverHandled = false;
@@ -137,7 +141,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
 
     @Override
     public void requestPlayerName() {
-        String name = showInputDialog("Name für Leaderboard:", model.getPlayerName());
+        String name = showInputDialog("Name für Leaderboard:", model.getPlayerName(), ASSET_DIALOG_INPUT);
         if (name != null && !name.trim().isEmpty()) {
             model.setPlayerName(name);
         }
@@ -145,27 +149,32 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     }
 
     private void handleGameOver() {
+        showOptionDialog("Keine Züge mehr. Spiel beendet.", "Game Over", new String[]{"OK"}, "OK", ASSET_DIALOG_GAME_OVER);
+        int score = ScoreCalculator.calculate(model.getElapsedDuration(), model.getPegsLeft(), model.getMovesCount());
+        long durationSeconds = model.getElapsedDuration().getSeconds();
         LeaderboardManager.Entry entry = new LeaderboardManager.Entry(
                 "",
+                score,
                 model.getPegsLeft(),
-                model.getMovesCount(),
+                durationSeconds,
                 System.currentTimeMillis(),
                 true);
         if (!leaderboard.isTop10Candidate(entry)) {
             return;
         }
-        String name = showInputDialog("Name für Leaderboard:", model.getPlayerName());
+        String name = showInputDialog("Name für Leaderboard:", model.getPlayerName(), ASSET_DIALOG_INPUT);
         if (name == null || name.trim().isEmpty()) {
             name = model.getPlayerName();
         }
         model.setPlayerName(name);
-        entry = new LeaderboardManager.Entry(name.trim(), entry.pegsLeft(), entry.moves(), entry.timestamp(), entry.powerupsEnabled());
+        entry = new LeaderboardManager.Entry(name.trim(), entry.score(), entry.pegsLeft(), entry.durationSeconds(), entry.timestamp(), entry.powerupsEnabled());
         leaderboard.addEntry(entry);
         repaint();
     }
 
-    private int showOptionDialog(String message, String title, String[] options, String initialValue) {
-        JOptionPane pane = new JOptionPane(message, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, null, options, initialValue);
+    private int showOptionDialog(String message, String title, String[] options, String initialValue, String assetName) {
+        ImageIcon icon = new ImageIcon(assets.getImage(assetName));
+        JOptionPane pane = new JOptionPane(message, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, icon, options, initialValue);
         JDialog dialog = pane.createDialog(this, title);
         dialog.setAlwaysOnTop(true);
         dialog.setLocationRelativeTo(this);
@@ -184,8 +193,9 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         return -1;
     }
 
-    private String showInputDialog(String message, String initialValue) {
-        JOptionPane pane = new JOptionPane(message, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+    private String showInputDialog(String message, String initialValue, String assetName) {
+        ImageIcon icon = new ImageIcon(assets.getImage(assetName));
+        JOptionPane pane = new JOptionPane(message, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION, icon, null, null);
         pane.setWantsInput(true);
         pane.setInitialSelectionValue(initialValue);
         JDialog dialog = pane.createDialog(this, "Input");

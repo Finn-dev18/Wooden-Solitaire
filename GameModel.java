@@ -31,6 +31,8 @@ public class GameModel {
     private int hintToCol = -1;
     private long hintEndTime;
     private String playerName = "Spieler";
+    private long startTimeMs;
+    private long endTimeMs;
 
     public GameModel() {
         resetGame();
@@ -50,6 +52,8 @@ public class GameModel {
         hintToRow = -1;
         hintEndTime = 0;
         gameOver = false;
+        startTimeMs = System.currentTimeMillis();
+        endTimeMs = 0;
         statusMessage = "Wähle eine Kugel für deinen Zug.";
         clearStatuses();
         initCharges();
@@ -149,6 +153,14 @@ public class GameModel {
 
     public boolean isGameOver() {
         return gameOver;
+    }
+
+    public java.time.Duration getElapsedDuration() {
+        long endTime = endTimeMs > 0 ? endTimeMs : System.currentTimeMillis();
+        if (endTime < startTimeMs) {
+            return java.time.Duration.ZERO;
+        }
+        return java.time.Duration.ofMillis(endTime - startTimeMs);
     }
 
     public boolean hasHintHighlight() {
@@ -543,6 +555,9 @@ public class GameModel {
     private void updateGameOver() {
         if (!hasAnyValidMove()) {
             gameOver = true;
+            if (endTimeMs == 0) {
+                endTimeMs = System.currentTimeMillis();
+            }
             statusMessage = "Keine Züge mehr. Spiel beendet.";
             addCredits(5);
         }

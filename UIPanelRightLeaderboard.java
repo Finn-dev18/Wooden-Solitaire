@@ -13,7 +13,7 @@ import java.util.List;
 
 public class UIPanelRightLeaderboard extends JPanel {
     private static final Color COLOR_TEXT = new Color(43, 253, 223);
-    private static final Color COLOR_TEXT_MUTED = new Color(171, 25, 111);
+    private static final Color COLOR_TEXT_MUTED = new Color(224, 230, 255);
     private static final int BASE_WIDTH = 260;
     private static final int BASE_PADDING = 16;
     private static final int BASE_BUTTON_WIDTH = 240;
@@ -124,6 +124,11 @@ public class UIPanelRightLeaderboard extends JPanel {
         y += padding;
         g2d.drawString("Pegs: " + model.getPegsLeft(), x, y);
         y += padding;
+        g2d.drawString("Zeit: " + formatDuration(model.getElapsedDuration()), x, y);
+        y += padding;
+        int score = ScoreCalculator.calculate(model.getElapsedDuration(), model.getPegsLeft(), model.getMovesCount());
+        g2d.drawString("Punkte: " + score, x, y);
+        y += padding;
         g2d.drawString("Spieler: " + model.getPlayerName(), x, y);
         y += padding;
         g2d.drawString("Credits: " + model.getCredits(), x, y);
@@ -149,7 +154,7 @@ public class UIPanelRightLeaderboard extends JPanel {
         g2d.setFont(getFont().deriveFont(Font.PLAIN, 11f * fontScale));
         for (int i = 0; i < entries.size(); i++) {
             LeaderboardManager.Entry entry = entries.get(i);
-            String line = (i + 1) + ". " + entry.name() + " - " + entry.pegsLeft() + " / " + entry.moves();
+            String line = (i + 1) + ". " + entry.name() + " - " + entry.score() + " P / " + formatDuration(entry.durationSeconds()) + " / " + entry.pegsLeft() + " Pegs";
             g2d.drawString(line, x, y);
             y += padding / 2;
         }
@@ -211,5 +216,18 @@ public class UIPanelRightLeaderboard extends JPanel {
                 slice, panel.getHeight() - slice, panel.getWidth() - slice, panel.getHeight(), null);
         g2d.drawImage(panel, x + w - scaledSlice, y + h - scaledSlice, x + w, y + h,
                 panel.getWidth() - slice, panel.getHeight() - slice, panel.getWidth(), panel.getHeight(), null);
+    }
+
+    private String formatDuration(java.time.Duration duration) {
+        long seconds = duration == null ? 0 : duration.getSeconds();
+        long minutes = seconds / 60;
+        long remainingSeconds = seconds % 60;
+        return String.format("%02d:%02d", minutes, remainingSeconds);
+    }
+
+    private String formatDuration(long seconds) {
+        long minutes = seconds / 60;
+        long remainingSeconds = seconds % 60;
+        return String.format("%02d:%02d", minutes, remainingSeconds);
     }
 }
