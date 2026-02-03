@@ -14,6 +14,7 @@ public class GameModel {
     private final Map<PowerupType, Integer> charges = new EnumMap<>(PowerupType.class);
 
     private int movesCount;
+    private int credits;
     private int selectedRow = -1;
     private int selectedCol = -1;
     private boolean[][] validTargets = new boolean[BOARD_SIZE][BOARD_SIZE];
@@ -29,6 +30,7 @@ public class GameModel {
     private int hintToRow = -1;
     private int hintToCol = -1;
     private long hintEndTime;
+    private String playerName = "Spieler";
 
     public GameModel() {
         resetGame();
@@ -56,12 +58,9 @@ public class GameModel {
 
     private void initCharges() {
         charges.clear();
-        charges.put(PowerupType.HINT, 99);
-        charges.put(PowerupType.BOMB, 1);
-        charges.put(PowerupType.SWAP, 2);
-        charges.put(PowerupType.FREEZE, 1);
-        charges.put(PowerupType.LASER, 1);
-        charges.put(PowerupType.SHIELD, 1);
+        for (PowerupType type : PowerupType.values()) {
+            charges.put(type, 0);
+        }
     }
 
     private void clearStatuses() {
@@ -75,6 +74,10 @@ public class GameModel {
 
     public int getMovesCount() {
         return movesCount;
+    }
+
+    public int getCredits() {
+        return credits;
     }
 
     public int getPegsLeft() {
@@ -131,6 +134,17 @@ public class GameModel {
 
     public String getStatusMessage() {
         return statusMessage;
+    }
+
+    public String getPlayerName() {
+        return playerName;
+    }
+
+    public void setPlayerName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return;
+        }
+        playerName = name.trim();
     }
 
     public boolean isGameOver() {
@@ -227,6 +241,7 @@ public class GameModel {
         board.set(jumpRow, jumpCol, '○');
         board.set(toRow, toCol, '●');
         movesCount++;
+        addCredits(1);
         tickStatusesAfterMove();
         selectedRow = -1;
         selectedCol = -1;
@@ -242,7 +257,7 @@ public class GameModel {
         }
         int remaining = charges.getOrDefault(type, 0);
         if (remaining <= 0) {
-            statusMessage = "Keine Ladungen verfügbar.";
+            statusMessage = "Keine Ladungen verfügbar. Shop nutzen.";
             return;
         }
         if (type == PowerupType.HINT) {
@@ -398,6 +413,40 @@ public class GameModel {
         }
     }
 
+    public boolean purchasePowerup(PowerupType type) {
+        if (type == null) {
+            return false;
+        }
+        int cost = type.getCost();
+        if (cost <= 0) {
+            return false;
+        }
+        if (!spendCredits(cost)) {
+            statusMessage = "Nicht genug Credits.";
+            return false;
+        }
+        charges.put(type, charges.getOrDefault(type, 0) + 1);
+        statusMessage = type.getLabel() + " gekauft.";
+        return true;
+    }
+
+    private void addCredits(int amount) {
+        if (amount > 0) {
+            credits += amount;
+        }
+    }
+
+    private boolean spendCredits(int amount) {
+        if (amount <= 0) {
+            return true;
+        }
+        if (credits < amount) {
+            return false;
+        }
+        credits -= amount;
+        return true;
+    }
+
     private void triggerHint() {
         Move hintMove = findAnyValidMove();
         if (hintMove == null) {
@@ -495,6 +544,7 @@ public class GameModel {
         if (!hasAnyValidMove()) {
             gameOver = true;
             statusMessage = "Keine Züge mehr. Spiel beendet.";
+            addCredits(5);
         }
     }
 }
