@@ -38,8 +38,8 @@ public class LeaderboardManager {
 
     private Comparator<Entry> entryComparator() {
         return Comparator
-                .comparingInt(Entry::pegsLeft)
-                .thenComparingInt(Entry::moves)
+                .comparingInt(Entry::score).reversed()
+                .thenComparingLong(Entry::durationSeconds)
                 .thenComparingLong(Entry::timestamp);
     }
 
@@ -49,15 +49,16 @@ public class LeaderboardManager {
         }
         try {
             String json = Files.readString(STORAGE_PATH);
-            Pattern pattern = Pattern.compile("\\{\\s*\\\"name\\\"\\s*:\\s*\\\"(.*?)\\\"\\s*,\\s*\\\"pegsLeft\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"moves\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"timestamp\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"powerupsEnabled\\\"\\s*:\\s*(true|false)\\s*\\}");
+            Pattern pattern = Pattern.compile("\\{\\s*\\\"name\\\"\\s*:\\s*\\\"(.*?)\\\"\\s*,\\s*\\\"score\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"pegsLeft\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"durationSeconds\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"timestamp\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"powerupsEnabled\\\"\\s*:\\s*(true|false)\\s*\\}");
             Matcher matcher = pattern.matcher(json);
             while (matcher.find()) {
                 String name = unescape(matcher.group(1));
-                int pegs = Integer.parseInt(matcher.group(2));
-                int moves = Integer.parseInt(matcher.group(3));
-                long timestamp = Long.parseLong(matcher.group(4));
-                boolean powerupsEnabled = Boolean.parseBoolean(matcher.group(5));
-                entries.add(new Entry(name, pegs, moves, timestamp, powerupsEnabled));
+                int score = Integer.parseInt(matcher.group(2));
+                int pegs = Integer.parseInt(matcher.group(3));
+                long durationSeconds = Long.parseLong(matcher.group(4));
+                long timestamp = Long.parseLong(matcher.group(5));
+                boolean powerupsEnabled = Boolean.parseBoolean(matcher.group(6));
+                entries.add(new Entry(name, score, pegs, durationSeconds, timestamp, powerupsEnabled));
             }
             entries.sort(entryComparator());
             if (entries.size() > 10) {
@@ -78,10 +79,12 @@ public class LeaderboardManager {
             }
             builder.append("    {\"name\":\"")
                     .append(escape(entry.name()))
-                    .append("\",\"pegsLeft\":")
+                    .append("\",\"score\":")
+                    .append(entry.score())
+                    .append(",\"pegsLeft\":")
                     .append(entry.pegsLeft())
-                    .append(",\"moves\":")
-                    .append(entry.moves())
+                    .append(",\"durationSeconds\":")
+                    .append(entry.durationSeconds())
                     .append(",\"timestamp\":")
                     .append(entry.timestamp())
                     .append(",\"powerupsEnabled\":")
@@ -104,6 +107,6 @@ public class LeaderboardManager {
         return value.replace("\\\"", "\"").replace("\\\\", "\\");
     }
 
-    public record Entry(String name, int pegsLeft, int moves, long timestamp, boolean powerupsEnabled) {
+    public record Entry(String name, int score, int pegsLeft, long durationSeconds, long timestamp, boolean powerupsEnabled) {
     }
 }
