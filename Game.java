@@ -2,7 +2,7 @@ public class Game {
 
     public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(() -> {
-            WoodenSolitaireUI ui = new WoodenSolitaireUI();
+            WoodenSolitaireGUI ui = new WoodenSolitaireGUI();
             ui.setVisible(true);
         });
     }
