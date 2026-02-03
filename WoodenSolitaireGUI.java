@@ -1,25 +1,23 @@
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
+import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyEvent;
 
 public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final Color COLOR_BG = new Color(39, 30, 112);
-    private static final int BASE_LEFT_WIDTH = 220;
-    private static final int BASE_RIGHT_WIDTH = 260;
-    private static final int BASE_BOARD = 512;
-    private static final int BASE_HEIGHT = 560;
-    private static final String ASSET_DIALOG_MENU = "menu_dialog_480x240.png";
-    private static final String ASSET_DIALOG_INPUT = "input_dialog_480x240.png";
-    private static final String ASSET_DIALOG_GAME_OVER = "game_over_dialog_480x240.png";
+    private static final int BASE_LEFT_WIDTH = 256;
+    private static final int BASE_RIGHT_WIDTH = 256;
+    private static final int BASE_BOARD = 256;
+    private static final int BASE_GAP = 64;
+    private static final int BASE_HEIGHT = 512;
 
     private final AssetManager assets = new AssetManager();
     private final GameModel model = new GameModel();
@@ -27,6 +25,8 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private final GamePanel gamePanel;
     private final UIPanelLeftPowerups leftPanel;
     private final UIPanelRightLeaderboard rightPanel;
+    private final OverlayPanel overlayPanel;
+    private int scale = 2;
     private boolean gameOverHandled;
 
     public WoodenSolitaireGUI() {
@@ -39,10 +39,14 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         gamePanel = new GamePanel(assets, model, this);
         leftPanel = new UIPanelLeftPowerups(assets, model, this);
         rightPanel = new UIPanelRightLeaderboard(assets, model, leaderboard, this);
+        overlayPanel = new OverlayPanel(assets, model, leaderboard, this);
 
         add(leftPanel, BorderLayout.WEST);
         add(gamePanel, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
+
+        setGlassPane(overlayPanel);
+        overlayPanel.setVisible(true);
 
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -51,11 +55,14 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
             }
         });
 
+        setupKeyBindings();
         updateScale();
         pack();
         setLocationRelativeTo(null);
         enableFullscreen();
         updateScale();
+
+        overlayPanel.setOverlayState(OverlayState.PRE_GAME_NAME);
 
         Timer repaintTimer = new Timer(1000 / 30, event -> repaint());
         repaintTimer.start();
@@ -77,33 +84,130 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         if (width <= 0 || height <= 0) {
             return;
         }
-        int baseWidth = BASE_LEFT_WIDTH + BASE_BOARD + BASE_RIGHT_WIDTH + 64;
-        int baseHeight = BASE_HEIGHT;
-        double scale = Math.max(1, Math.min(width / (double) baseWidth, height / (double) baseHeight));
+        int baseWidth = BASE_LEFT_WIDTH + BASE_BOARD + BASE_RIGHT_WIDTH + BASE_GAP;
+        double scaleValue = Math.min(width / (double) baseWidth, height / (double) BASE_HEIGHT);
+        int nextScale = (int) Math.floor(scaleValue);
+        nextScale = Math.max(2, Math.min(6, nextScale));
+        if (nextScale != scale) {
+            scale = nextScale;
+        }
         leftPanel.setScale(scale);
         rightPanel.setScale(scale);
         gamePanel.setScale(scale);
         revalidate();
     }
 
+    private void setupKeyBindings() {
+        JRootPane root = getRootPane();
+        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
+                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "toggleMenu");
+        root.getActionMap().put("toggleMenu", new javax.swing.AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleEscape();
+            }
+        });
+
+        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
+                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "overlayEnter");
+        root.getActionMap().put("overlayEnter", new javax.swing.AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleEnter();
+            }
+        });
+
+        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
+                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_H, 0), "laserHorizontal");
+        root.getActionMap().put("laserHorizontal", new javax.swing.AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
+                    model.applyLaserDirection(true);
+                    onModelUpdated();
+                }
+            }
+        });
+
+        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
+                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_V, 0), "laserVertical");
+        root.getActionMap().put("laserVertical", new javax.swing.AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
+                    model.applyLaserDirection(false);
+                    onModelUpdated();
+                }
+            }
+        });
+
+        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
+                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "laserHorizontalLeft");
+        root.getActionMap().put("laserHorizontalLeft", new javax.swing.AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
+                    model.applyLaserDirection(true);
+                    onModelUpdated();
+                }
+            }
+        });
+
+        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
+                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "laserHorizontalRight");
+        root.getActionMap().put("laserHorizontalRight", new javax.swing.AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
+                    model.applyLaserDirection(true);
+                    onModelUpdated();
+                }
+            }
+        });
+
+        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
+                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "laserVerticalUp");
+        root.getActionMap().put("laserVerticalUp", new javax.swing.AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
+                    model.applyLaserDirection(false);
+                    onModelUpdated();
+                }
+            }
+        });
+
+        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
+                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "laserVerticalDown");
+        root.getActionMap().put("laserVerticalDown", new javax.swing.AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
+                    model.applyLaserDirection(false);
+                    onModelUpdated();
+                }
+            }
+        });
+    }
+
+    public void setOverlayState(OverlayState state) {
+        overlayPanel.setOverlayState(state);
+    }
+
+    public void handleEscape() {
+        if (overlayPanel.getOverlayState() == OverlayState.NONE) {
+            overlayPanel.setOverlayState(OverlayState.MENU);
+        } else if (overlayPanel.getOverlayState() == OverlayState.MENU) {
+            overlayPanel.setOverlayState(OverlayState.NONE);
+        }
+    }
+
+    public void handleEnter() {
+        overlayPanel.handleEnterKey();
+    }
+
     @Override
     public void requestLaserDirection() {
-        int result = JOptionPane.showOptionDialog(this,
-                "Laser Richtung auswählen",
-                "Laser",
-                JOptionPane.DEFAULT_OPTION,
-                JOptionPane.INFORMATION_MESSAGE,
-                null,
-                new String[]{"Horizontal", "Vertikal", "Abbrechen"},
-                "Horizontal");
-        if (result == 0) {
-            model.applyLaserDirection(true);
-        } else if (result == 1) {
-            model.applyLaserDirection(false);
-        } else {
-            model.cancelPowerup();
-            model.clearLaserPending();
-        }
         onModelUpdated();
     }
 
@@ -112,7 +216,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         repaint();
         if (model.isGameOver()) {
             if (!gameOverHandled) {
-                handleGameOver();
+                overlayPanel.setOverlayState(OverlayState.GAME_OVER);
                 gameOverHandled = true;
             }
         } else {
@@ -122,93 +226,29 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
 
     @Override
     public void requestMenu() {
-        int result = showOptionDialog("Menü", "Menu", new String[]{"Resume", "New Game", "Quit"}, "Resume", ASSET_DIALOG_MENU);
-        if (result == 1) {
-            model.resetGame();
-            gameOverHandled = false;
-        } else if (result == 2) {
-            System.exit(0);
-        }
-        onModelUpdated();
+        overlayPanel.setOverlayState(OverlayState.MENU);
     }
 
     @Override
     public void requestRestart() {
         model.resetGame();
         gameOverHandled = false;
+        overlayPanel.setOverlayState(OverlayState.NONE);
         onModelUpdated();
     }
 
     @Override
-    public void requestPlayerName() {
-        String name = showInputDialog("Name für Leaderboard:", model.getPlayerName(), ASSET_DIALOG_INPUT);
-        if (name != null && !name.trim().isEmpty()) {
-            model.setPlayerName(name);
-        }
-        onModelUpdated();
+    public boolean isOverlayActive() {
+        return overlayPanel.isOverlayActive();
     }
 
-    private void handleGameOver() {
-        showOptionDialog("Keine Züge mehr. Spiel beendet.", "Game Over", new String[]{"OK"}, "OK", ASSET_DIALOG_GAME_OVER);
-        int score = ScoreCalculator.calculate(model.getElapsedDuration(), model.getPegsLeft(), model.getMovesCount());
-        long durationSeconds = model.getElapsedDuration().getSeconds();
-        LeaderboardManager.Entry entry = new LeaderboardManager.Entry(
-                "",
-                score,
-                model.getPegsLeft(),
-                durationSeconds,
-                System.currentTimeMillis(),
-                true);
-        if (!leaderboard.isTop10Candidate(entry)) {
-            return;
-        }
-        String name = showInputDialog("Name für Leaderboard:", model.getPlayerName(), ASSET_DIALOG_INPUT);
-        if (name == null || name.trim().isEmpty()) {
-            name = model.getPlayerName();
-        }
-        model.setPlayerName(name);
-        entry = new LeaderboardManager.Entry(name.trim(), entry.score(), entry.pegsLeft(), entry.durationSeconds(), entry.timestamp(), entry.powerupsEnabled());
-        leaderboard.addEntry(entry);
-        repaint();
+    @Override
+    public OverlayState getOverlayState() {
+        return overlayPanel.getOverlayState();
     }
 
-    private int showOptionDialog(String message, String title, String[] options, String initialValue, String assetName) {
-        ImageIcon icon = new ImageIcon(assets.getImage(assetName));
-        JOptionPane pane = new JOptionPane(message, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, icon, options, initialValue);
-        JDialog dialog = pane.createDialog(this, title);
-        dialog.setAlwaysOnTop(true);
-        dialog.setLocationRelativeTo(this);
-        dialog.setModal(true);
-        dialog.setVisible(true);
-        Object value = pane.getValue();
-        dialog.dispose();
-        if (value == null) {
-            return -1;
-        }
-        for (int i = 0; i < options.length; i++) {
-            if (options[i].equals(value)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private String showInputDialog(String message, String initialValue, String assetName) {
-        ImageIcon icon = new ImageIcon(assets.getImage(assetName));
-        JOptionPane pane = new JOptionPane(message, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION, icon, null, null);
-        pane.setWantsInput(true);
-        pane.setInitialSelectionValue(initialValue);
-        JDialog dialog = pane.createDialog(this, "Input");
-        dialog.setAlwaysOnTop(true);
-        dialog.setLocationRelativeTo(this);
-        dialog.setModal(true);
-        dialog.setVisible(true);
-        Object value = pane.getInputValue();
-        dialog.dispose();
-        if (value == JOptionPane.UNINITIALIZED_VALUE) {
-            return null;
-        }
-        return value == null ? null : value.toString();
+    public int getScale() {
+        return scale;
     }
 
     public static void main(String[] args) {

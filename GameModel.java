@@ -30,7 +30,7 @@ public class GameModel {
     private int hintToRow = -1;
     private int hintToCol = -1;
     private long hintEndTime;
-    private String playerName = "Spieler";
+    private String playerName = "Player";
     private long startTimeMs;
     private long endTimeMs;
 
@@ -145,10 +145,17 @@ public class GameModel {
     }
 
     public void setPlayerName(String name) {
-        if (name == null || name.trim().isEmpty()) {
+        if (name == null) {
             return;
         }
-        playerName = name.trim();
+        String trimmed = name.trim();
+        if (trimmed.isEmpty()) {
+            return;
+        }
+        if (trimmed.length() > 12) {
+            trimmed = trimmed.substring(0, 12);
+        }
+        playerName = trimmed;
     }
 
     public boolean isGameOver() {
@@ -380,7 +387,7 @@ public class GameModel {
         }
         laserRow = r;
         laserCol = c;
-        statusMessage = "Laser: Richtung auswählen.";
+        statusMessage = "Laser: Richtung auswählen (H/V oder Pfeile).";
     }
 
     public void applyLaserDirection(boolean horizontal) {

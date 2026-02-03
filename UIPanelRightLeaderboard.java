@@ -14,26 +14,23 @@ import java.util.List;
 public class UIPanelRightLeaderboard extends JPanel {
     private static final Color COLOR_TEXT = new Color(43, 253, 223);
     private static final Color COLOR_TEXT_MUTED = new Color(224, 230, 255);
-    private static final int BASE_WIDTH = 260;
+    private static final int BASE_WIDTH = 256;
     private static final int BASE_PADDING = 16;
-    private static final int BASE_BUTTON_WIDTH = 240;
-    private static final int BASE_BUTTON_HEIGHT = 64;
-    private static final int BASE_BUTTON_GAP = 8;
+    private static final int BASE_BUTTON_WIDTH = 260;
+    private static final int BASE_BUTTON_HEIGHT = 72;
+    private static final int BASE_BUTTON_GAP = 12;
 
     private final AssetManager assets;
     private final GameModel model;
     private final LeaderboardManager leaderboard;
     private final GameUIController controller;
-    private double scale = 2;
+    private int scale = 2;
     private Rectangle menuButton;
     private Rectangle restartButton;
-    private Rectangle nameButton;
     private boolean menuHover;
     private boolean restartHover;
-    private boolean nameHover;
     private boolean menuPressed;
     private boolean restartPressed;
-    private boolean namePressed;
 
     public UIPanelRightLeaderboard(AssetManager assets, GameModel model, LeaderboardManager leaderboard, GameUIController controller) {
         this.assets = assets;
@@ -44,8 +41,8 @@ public class UIPanelRightLeaderboard extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if (nameButton != null && nameButton.contains(e.getX(), e.getY())) {
-                    namePressed = true;
+                if (controller.isOverlayActive()) {
+                    return;
                 }
                 if (menuButton != null && menuButton.contains(e.getX(), e.getY())) {
                     menuPressed = true;
@@ -58,8 +55,11 @@ public class UIPanelRightLeaderboard extends JPanel {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (namePressed && nameButton != null && nameButton.contains(e.getX(), e.getY())) {
-                    controller.requestPlayerName();
+                if (controller.isOverlayActive()) {
+                    menuPressed = false;
+                    restartPressed = false;
+                    repaint();
+                    return;
                 }
                 if (menuPressed && menuButton != null && menuButton.contains(e.getX(), e.getY())) {
                     controller.requestMenu();
@@ -69,7 +69,6 @@ public class UIPanelRightLeaderboard extends JPanel {
                 }
                 menuPressed = false;
                 restartPressed = false;
-                namePressed = false;
                 repaint();
             }
 
@@ -77,14 +76,18 @@ public class UIPanelRightLeaderboard extends JPanel {
             public void mouseExited(MouseEvent e) {
                 menuHover = false;
                 restartHover = false;
-                nameHover = false;
                 repaint();
             }
         });
         addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                nameHover = nameButton != null && nameButton.contains(e.getX(), e.getY());
+                if (controller.isOverlayActive()) {
+                    menuHover = false;
+                    restartHover = false;
+                    repaint();
+                    return;
+                }
                 menuHover = menuButton != null && menuButton.contains(e.getX(), e.getY());
                 restartHover = restartButton != null && restartButton.contains(e.getX(), e.getY());
                 repaint();
@@ -92,8 +95,8 @@ public class UIPanelRightLeaderboard extends JPanel {
         });
     }
 
-    public void setScale(double scale) {
-        this.scale = Math.max(1, scale);
+    public void setScale(int scale) {
+        this.scale = Math.max(2, scale);
         setPreferredSize(new Dimension((int) Math.round(BASE_WIDTH * this.scale), 1));
         revalidate();
         repaint();
@@ -105,8 +108,10 @@ public class UIPanelRightLeaderboard extends JPanel {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
 
-        drawPanelBackground(g2d);
+        g2d.setColor(new Color(21, 16, 68));
+        g2d.fillRect(0, 0, getWidth(), getHeight());
 
         int padding = (int) Math.round(BASE_PADDING * scale);
         float fontScale = (float) (scale / 2.0);
@@ -133,17 +138,6 @@ public class UIPanelRightLeaderboard extends JPanel {
         y += padding;
         g2d.drawString("Credits: " + model.getCredits(), x, y);
         y += padding;
-        g2d.drawString("Modus: Pixelart", x, y);
-        y += padding;
-
-        g2d.setColor(COLOR_TEXT);
-        g2d.setFont(getFont().deriveFont(Font.BOLD, 12f * fontScale));
-        g2d.drawString("Status:", x, y);
-        y += padding / 2;
-        g2d.setFont(getFont().deriveFont(Font.PLAIN, 11f * fontScale));
-        g2d.setColor(COLOR_TEXT_MUTED);
-        g2d.drawString(model.getStatusMessage(), x, y);
-        y += padding * 2;
 
         g2d.setColor(COLOR_TEXT);
         g2d.setFont(getFont().deriveFont(Font.BOLD, 16f * fontScale));
@@ -163,12 +157,10 @@ public class UIPanelRightLeaderboard extends JPanel {
         int buttonHeight = (int) Math.round(BASE_BUTTON_HEIGHT * scale);
         int buttonGap = (int) Math.round(BASE_BUTTON_GAP * scale);
         int buttonX = (getWidth() - buttonWidth) / 2;
-        int buttonY = getHeight() - padding - (buttonHeight * 3) - buttonGap * 2;
-        nameButton = new Rectangle(buttonX, buttonY, buttonWidth, buttonHeight);
-        menuButton = new Rectangle(buttonX, buttonY + buttonHeight + buttonGap, buttonWidth, buttonHeight);
-        restartButton = new Rectangle(buttonX, buttonY + (buttonHeight + buttonGap) * 2, buttonWidth, buttonHeight);
+        int buttonY = getHeight() - padding - (buttonHeight * 2) - buttonGap;
+        menuButton = new Rectangle(buttonX, buttonY, buttonWidth, buttonHeight);
+        restartButton = new Rectangle(buttonX, buttonY + buttonHeight + buttonGap, buttonWidth, buttonHeight);
 
-        drawButton(g2d, nameButton, "NAME", nameHover, namePressed);
         drawButton(g2d, menuButton, "MENU", menuHover, menuPressed);
         drawButton(g2d, restartButton, "RESTART", restartHover, restartPressed);
 
@@ -178,44 +170,17 @@ public class UIPanelRightLeaderboard extends JPanel {
     private void drawButton(Graphics2D g2d, Rectangle rect, String text, boolean hover, boolean pressed) {
         BufferedImage image;
         if (pressed) {
-            image = assets.getImage("menu_button_pressed_240x64.png");
+            image = assets.getImage("ui_button_pressed_260x72.png");
         } else if (hover) {
-            image = assets.getImage("menu_button_hover_240x64.png");
+            image = assets.getImage("ui_button_hover_260x72.png");
         } else {
-            image = assets.getImage("menu_button_normal_240x64.png");
+            image = assets.getImage("ui_button_normal_260x72.png");
         }
         g2d.drawImage(image, rect.x, rect.y, rect.width, rect.height, null);
-        g2d.setColor(COLOR_TEXT);
+        g2d.setColor(new Color(30, 30, 30));
         g2d.setFont(getFont().deriveFont(Font.BOLD, (float) (14f * scale / 2f)));
         int textWidth = g2d.getFontMetrics().stringWidth(text);
-        g2d.drawString(text, rect.x + (rect.width - textWidth) / 2, rect.y + rect.height / 2 + (int) Math.round(5 * scale / 2f));
-    }
-
-    private void drawPanelBackground(Graphics2D g2d) {
-        BufferedImage panel = assets.getImage("panel_9slice_24.png");
-        int slice = panel.getWidth() / 3;
-        int scaledSlice = (int) Math.round(slice * scale);
-        int x = 0;
-        int y = 0;
-        int w = getWidth();
-        int h = getHeight();
-        g2d.drawImage(panel, x, y, x + scaledSlice, y + scaledSlice, 0, 0, slice, slice, null);
-        g2d.drawImage(panel, x + scaledSlice, y, x + w - scaledSlice, y + scaledSlice,
-                slice, 0, panel.getWidth() - slice, slice, null);
-        g2d.drawImage(panel, x + w - scaledSlice, y, x + w, y + scaledSlice,
-                panel.getWidth() - slice, 0, panel.getWidth(), slice, null);
-        g2d.drawImage(panel, x, y + scaledSlice, x + scaledSlice, y + h - scaledSlice,
-                0, slice, slice, panel.getHeight() - slice, null);
-        g2d.drawImage(panel, x + scaledSlice, y + scaledSlice, x + w - scaledSlice, y + h - scaledSlice,
-                slice, slice, panel.getWidth() - slice, panel.getHeight() - slice, null);
-        g2d.drawImage(panel, x + w - scaledSlice, y + scaledSlice, x + w, y + h - scaledSlice,
-                panel.getWidth() - slice, slice, panel.getWidth(), panel.getHeight() - slice, null);
-        g2d.drawImage(panel, x, y + h - scaledSlice, x + scaledSlice, y + h,
-                0, panel.getHeight() - slice, slice, panel.getHeight(), null);
-        g2d.drawImage(panel, x + scaledSlice, y + h - scaledSlice, x + w - scaledSlice, y + h,
-                slice, panel.getHeight() - slice, panel.getWidth() - slice, panel.getHeight(), null);
-        g2d.drawImage(panel, x + w - scaledSlice, y + h - scaledSlice, x + w, y + h,
-                panel.getWidth() - slice, panel.getHeight() - slice, panel.getWidth(), panel.getHeight(), null);
+        g2d.drawString(text, rect.x + (rect.width - textWidth) / 2, rect.y + rect.height / 2 + (int) Math.round(6 * scale / 2f));
     }
 
     private String formatDuration(java.time.Duration duration) {
