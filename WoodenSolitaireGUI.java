@@ -1,4 +1,5 @@
 import javax.swing.JFrame;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -50,6 +51,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         pack();
         setLocationRelativeTo(null);
         enableFullscreen();
+        updateScale();
 
         Timer repaintTimer = new Timer(1000 / 30, event -> repaint());
         repaintTimer.start();
@@ -73,7 +75,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         }
         int baseWidth = BASE_LEFT_WIDTH + BASE_BOARD + BASE_RIGHT_WIDTH + 64;
         int baseHeight = BASE_HEIGHT;
-        int scale = Math.max(1, Math.min(width / baseWidth, height / baseHeight));
+        double scale = Math.max(1, Math.min(width / (double) baseWidth, height / (double) baseHeight));
         leftPanel.setScale(scale);
         rightPanel.setScale(scale);
         gamePanel.setScale(scale);
@@ -116,14 +118,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
 
     @Override
     public void requestMenu() {
-        int result = JOptionPane.showOptionDialog(this,
-                "Menü",
-                "Menu",
-                JOptionPane.DEFAULT_OPTION,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                new String[]{"Resume", "New Game", "Quit"},
-                "Resume");
+        int result = showOptionDialog("Menü", "Menu", new String[]{"Resume", "New Game", "Quit"}, "Resume");
         if (result == 1) {
             model.resetGame();
             gameOverHandled = false;
@@ -140,6 +135,15 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         onModelUpdated();
     }
 
+    @Override
+    public void requestPlayerName() {
+        String name = showInputDialog("Name für Leaderboard:", model.getPlayerName());
+        if (name != null && !name.trim().isEmpty()) {
+            model.setPlayerName(name);
+        }
+        onModelUpdated();
+    }
+
     private void handleGameOver() {
         LeaderboardManager.Entry entry = new LeaderboardManager.Entry(
                 "",
@@ -150,13 +154,51 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         if (!leaderboard.isTop10Candidate(entry)) {
             return;
         }
-        String name = JOptionPane.showInputDialog(this, "Name für Leaderboard:", "Spieler");
+        String name = showInputDialog("Name für Leaderboard:", model.getPlayerName());
         if (name == null || name.trim().isEmpty()) {
-            name = "Spieler";
+            name = model.getPlayerName();
         }
+        model.setPlayerName(name);
         entry = new LeaderboardManager.Entry(name.trim(), entry.pegsLeft(), entry.moves(), entry.timestamp(), entry.powerupsEnabled());
         leaderboard.addEntry(entry);
         repaint();
+    }
+
+    private int showOptionDialog(String message, String title, String[] options, String initialValue) {
+        JOptionPane pane = new JOptionPane(message, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, null, options, initialValue);
+        JDialog dialog = pane.createDialog(this, title);
+        dialog.setAlwaysOnTop(true);
+        dialog.setLocationRelativeTo(this);
+        dialog.setModal(true);
+        dialog.setVisible(true);
+        Object value = pane.getValue();
+        dialog.dispose();
+        if (value == null) {
+            return -1;
+        }
+        for (int i = 0; i < options.length; i++) {
+            if (options[i].equals(value)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private String showInputDialog(String message, String initialValue) {
+        JOptionPane pane = new JOptionPane(message, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+        pane.setWantsInput(true);
+        pane.setInitialSelectionValue(initialValue);
+        JDialog dialog = pane.createDialog(this, "Input");
+        dialog.setAlwaysOnTop(true);
+        dialog.setLocationRelativeTo(this);
+        dialog.setModal(true);
+        dialog.setVisible(true);
+        Object value = pane.getInputValue();
+        dialog.dispose();
+        if (value == JOptionPane.UNINITIALIZED_VALUE) {
+            return null;
+        }
+        return value == null ? null : value.toString();
     }
 
     public static void main(String[] args) {

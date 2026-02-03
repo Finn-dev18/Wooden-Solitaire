@@ -22,7 +22,7 @@ public class GamePanel extends JPanel {
     private final AssetManager assets;
     private final GameModel model;
     private final GameUIController controller;
-    private int scale = 2;
+    private double scale = 2;
     private Rectangle[][] slotRects = new Rectangle[GameModel.BOARD_SIZE][GameModel.BOARD_SIZE];
 
     public GamePanel(AssetManager assets, GameModel model, GameUIController controller) {
@@ -30,7 +30,8 @@ public class GamePanel extends JPanel {
         this.model = model;
         this.controller = controller;
         setBackground(COLOR_BG);
-        setPreferredSize(new Dimension(BASE_BOARD_SIZE * scale, BASE_BOARD_SIZE * scale));
+        int size = (int) Math.round(BASE_BOARD_SIZE * scale);
+        setPreferredSize(new Dimension(size, size));
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -39,9 +40,10 @@ public class GamePanel extends JPanel {
         });
     }
 
-    public void setScale(int scale) {
+    public void setScale(double scale) {
         this.scale = Math.max(1, scale);
-        setPreferredSize(new Dimension(BASE_BOARD_SIZE * this.scale, BASE_BOARD_SIZE * this.scale));
+        int size = (int) Math.round(BASE_BOARD_SIZE * this.scale);
+        setPreferredSize(new Dimension(size, size));
         revalidate();
         repaint();
     }
@@ -93,17 +95,17 @@ public class GamePanel extends JPanel {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
 
-        int size = BASE_BOARD_SIZE * scale;
+        int size = (int) Math.round(BASE_BOARD_SIZE * scale);
         int x = (getWidth() - size) / 2;
         int y = (getHeight() - size) / 2;
 
         BufferedImage boardImage = assets.getImage("board_octagon_512.png");
         g2d.drawImage(boardImage, x, y, size, size, null);
 
-        int cell = BASE_CELL * scale;
-        int inset = BASE_INSET * scale;
-        int slotSize = BASE_SLOT * scale;
-        int slotOffset = BASE_SLOT_OFFSET * scale;
+        int cell = (int) Math.round(BASE_CELL * scale);
+        int inset = (int) Math.round(BASE_INSET * scale);
+        int slotSize = (int) Math.round(BASE_SLOT * scale);
+        int slotOffset = (int) Math.round(BASE_SLOT_OFFSET * scale);
 
         BufferedImage slotImage = assets.getImage("slot_normal_32.png");
         BufferedImage pegNormal = assets.getImage("peg_normal_32.png");
