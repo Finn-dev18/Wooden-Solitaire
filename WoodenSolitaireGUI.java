@@ -13,10 +13,10 @@ import java.awt.event.KeyEvent;
 
 public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final Color COLOR_BG = new Color(39, 30, 112);
-    private static final int BASE_LEFT_WIDTH = 288;
-    private static final int BASE_RIGHT_WIDTH = 288;
+    private static final int BASE_LEFT_WIDTH = 220;
+    private static final int BASE_RIGHT_WIDTH = 240;
     private static final int BASE_BOARD = 256;
-    private static final int BASE_GAP = 64;
+    private static final int BASE_GAP = 28;
     private static final int BASE_HEIGHT = 512;
 
     private final AssetManager assets = new AssetManager();
@@ -52,6 +52,9 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
                 "ui_button_hover_260x72.png",
                 "ui_button_pressed_260x72.png",
                 "ui_button_disabled_260x72.png",
+                "menu_button_normal_240x64.png",
+                "menu_button_hover_240x64.png",
+                "menu_button_pressed_240x64.png",
                 "icon_hint_16.png",
                 "icon_bomb_16.png",
                 "icon_swap_16.png",
@@ -105,7 +108,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         int baseWidth = BASE_LEFT_WIDTH + BASE_BOARD + BASE_RIGHT_WIDTH + BASE_GAP;
         double scaleValue = Math.min(width / (double) baseWidth, height / (double) BASE_HEIGHT);
         int nextScale = (int) Math.floor(scaleValue);
-        nextScale = Math.max(2, Math.min(6, nextScale));
+        nextScale = Math.max(1, Math.min(6, nextScale));
         if (nextScale != scale) {
             scale = nextScale;
         }

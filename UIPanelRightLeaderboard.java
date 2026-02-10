@@ -14,7 +14,7 @@ import java.util.List;
 public class UIPanelRightLeaderboard extends JPanel {
     private static final Color COLOR_TEXT = new Color(43, 253, 223);
     private static final Color COLOR_TEXT_MUTED = new Color(224, 230, 255);
-    private static final int BASE_WIDTH = 288;
+    private static final int BASE_WIDTH = 240;
     private static final int BASE_PADDING = 16;
     private static final int BASE_BUTTON_WIDTH = 260;
     private static final int BASE_BUTTON_HEIGHT = 72;
@@ -119,11 +119,11 @@ public class UIPanelRightLeaderboard extends JPanel {
         int y = padding;
 
         g2d.setColor(COLOR_TEXT);
-        g2d.setFont(getFont().deriveFont(Font.BOLD, 16f * fontScale));
+        g2d.setFont(getFont().deriveFont(Font.BOLD, 14f * fontScale));
         g2d.drawString("STATS", x, y + (int) Math.round(12 * scale));
         y += padding + (int) Math.round(12 * scale);
 
-        g2d.setFont(getFont().deriveFont(Font.PLAIN, 12f * fontScale));
+        g2d.setFont(getFont().deriveFont(Font.PLAIN, 9f * fontScale));
         g2d.setColor(COLOR_TEXT_MUTED);
         g2d.drawString("Züge: " + model.getMovesCount(), x, y);
         y += padding;
@@ -140,12 +140,12 @@ public class UIPanelRightLeaderboard extends JPanel {
         y += padding;
 
         g2d.setColor(COLOR_TEXT);
-        g2d.setFont(getFont().deriveFont(Font.BOLD, 16f * fontScale));
+        g2d.setFont(getFont().deriveFont(Font.BOLD, 13f * fontScale));
         g2d.drawString("LEADERBOARD", x, y);
         y += padding;
 
         List<LeaderboardManager.Entry> entries = leaderboard.getTop10();
-        g2d.setFont(getFont().deriveFont(Font.PLAIN, 11f * fontScale));
+        g2d.setFont(getFont().deriveFont(Font.PLAIN, 9f * fontScale));
         for (int i = 0; i < entries.size(); i++) {
             LeaderboardManager.Entry entry = entries.get(i);
             String line = (i + 1) + ". " + entry.name() + " - " + entry.score() + " P / " + formatDuration(entry.durationSeconds()) + " / " + entry.pegsLeft() + " Pegs";
@@ -170,15 +170,15 @@ public class UIPanelRightLeaderboard extends JPanel {
     private void drawButton(Graphics2D g2d, Rectangle rect, String text, boolean hover, boolean pressed) {
         BufferedImage image;
         if (pressed) {
-            image = assets.getImage("ui_button_pressed_260x72.png");
+            image = assets.getImage("menu_button_pressed_240x64.png");
         } else if (hover) {
-            image = assets.getImage("ui_button_hover_260x72.png");
+            image = assets.getImage("menu_button_hover_240x64.png");
         } else {
-            image = assets.getImage("ui_button_normal_260x72.png");
+            image = assets.getImage("menu_button_normal_240x64.png");
         }
         g2d.drawImage(image, rect.x, rect.y, rect.width, rect.height, null);
         g2d.setColor(new Color(245, 241, 235));
-        g2d.setFont(getFont().deriveFont(Font.BOLD, (float) (14f * scale / 2f)));
+        g2d.setFont(getFont().deriveFont(Font.BOLD, (float) (12f * scale / 2f)));
         int textWidth = g2d.getFontMetrics().stringWidth(text);
         g2d.drawString(text, rect.x + (rect.width - textWidth) / 2, rect.y + rect.height / 2 + (int) Math.round(6 * scale / 2f));
     }
