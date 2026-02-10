@@ -22,6 +22,19 @@ public class AssetManager {
         return image;
     }
 
+
+
+    public void preload(String... names) {
+        if (names == null) {
+            return;
+        }
+        for (String name : names) {
+            if (name != null && !name.isEmpty()) {
+                getImage(name);
+            }
+        }
+    }
+
     private BufferedImage loadImage(String name) {
         File file = new File("assets", name);
         if (!file.exists()) {

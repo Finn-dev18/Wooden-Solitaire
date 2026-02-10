@@ -17,7 +17,8 @@ import java.util.Map;
 public class OverlayPanel extends JPanel {
     private static final Color COLOR_TEXT = new Color(245, 241, 235);
     private static final Color COLOR_TEXT_MUTED = new Color(224, 230, 255);
-    private static final Color COLOR_TEXT_DARK = new Color(30, 30, 30);
+    private static final Color COLOR_TEXT_DARK = new Color(245, 241, 235);
+    private static final Color COLOR_TEXT_INPUT = new Color(30, 30, 30);
     private static final int MAX_NAME_LENGTH = 12;
 
     private final AssetManager assets;
@@ -400,7 +401,7 @@ public class OverlayPanel extends JPanel {
 
         String text = nameInput == null ? "" : nameInput;
         g2d.setFont(getFont().deriveFont(Font.BOLD, 14f * fontScale));
-        g2d.setColor(COLOR_TEXT_DARK);
+        g2d.setColor(COLOR_TEXT_INPUT);
         int textX = inputX + (int) Math.round(24 * controller.getScale());
         int textY = inputY + (int) Math.round(58 * controller.getScale());
         g2d.drawString(text, textX, textY);
