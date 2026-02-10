@@ -55,12 +55,11 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
                 "menu_button_normal_240x64.png",
                 "menu_button_hover_240x64.png",
                 "menu_button_pressed_240x64.png",
-                "icon_hint_16.png",
                 "icon_bomb_16.png",
                 "icon_swap_16.png",
-                "icon_freeze_16.png",
+                "icon_hint_16.png",
                 "icon_laser_16.png",
-                "icon_shield_16.png");
+                "icon_freeze_16.png");
 
         add(leftPanel, BorderLayout.WEST);
         add(gamePanel, BorderLayout.CENTER);
@@ -138,77 +137,11 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
             }
         });
 
-        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
-                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_H, 0), "laserHorizontal");
-        root.getActionMap().put("laserHorizontal", new javax.swing.AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
-                    model.applyLaserDirection(true);
-                    onModelUpdated();
-                }
-            }
-        });
-
-        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
-                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_V, 0), "laserVertical");
-        root.getActionMap().put("laserVertical", new javax.swing.AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
-                    model.applyLaserDirection(false);
-                    onModelUpdated();
-                }
-            }
-        });
-
-        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
-                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "laserHorizontalLeft");
-        root.getActionMap().put("laserHorizontalLeft", new javax.swing.AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
-                    model.applyLaserDirection(true);
-                    onModelUpdated();
-                }
-            }
-        });
-
-        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
-                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "laserHorizontalRight");
-        root.getActionMap().put("laserHorizontalRight", new javax.swing.AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
-                    model.applyLaserDirection(true);
-                    onModelUpdated();
-                }
-            }
-        });
-
-        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
-                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "laserVerticalUp");
-        root.getActionMap().put("laserVerticalUp", new javax.swing.AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
-                    model.applyLaserDirection(false);
-                    onModelUpdated();
-                }
-            }
-        });
-
-        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
-                .put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "laserVerticalDown");
-        root.getActionMap().put("laserVerticalDown", new javax.swing.AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (model.hasLaserPending() && overlayPanel.getOverlayState() == OverlayState.NONE) {
-                    model.applyLaserDirection(false);
-                    onModelUpdated();
-                }
-            }
-        });
+        registerPowerupHotkey(root, KeyEvent.VK_1, PowerupType.UNDO);
+        registerPowerupHotkey(root, KeyEvent.VK_2, PowerupType.SWAP);
+        registerPowerupHotkey(root, KeyEvent.VK_3, PowerupType.BOMB);
+        registerPowerupHotkey(root, KeyEvent.VK_4, PowerupType.BRIDGEJUMP);
+        registerPowerupHotkey(root, KeyEvent.VK_5, PowerupType.RANDSTURM);
     }
 
     public void setOverlayState(OverlayState state) {
@@ -230,6 +163,22 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     @Override
     public void requestLaserDirection() {
         onModelUpdated();
+    }
+
+    private void registerPowerupHotkey(JRootPane root, int keyCode, PowerupType type) {
+        String actionName = "powerup_" + type.name();
+        root.getInputMap(JRootPane.WHEN_IN_FOCUSED_WINDOW)
+                .put(javax.swing.KeyStroke.getKeyStroke(keyCode, 0), actionName);
+        root.getActionMap().put(actionName, new javax.swing.AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (overlayPanel.getOverlayState() != OverlayState.NONE) {
+                    return;
+                }
+                model.activatePowerup(type);
+                onModelUpdated();
+            }
+        });
     }
 
     @Override
