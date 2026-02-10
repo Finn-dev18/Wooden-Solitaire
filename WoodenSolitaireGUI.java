@@ -13,8 +13,8 @@ import java.awt.event.KeyEvent;
 
 public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final Color COLOR_BG = new Color(39, 30, 112);
-    private static final int BASE_LEFT_WIDTH = 256;
-    private static final int BASE_RIGHT_WIDTH = 256;
+    private static final int BASE_LEFT_WIDTH = 288;
+    private static final int BASE_RIGHT_WIDTH = 288;
     private static final int BASE_BOARD = 256;
     private static final int BASE_GAP = 64;
     private static final int BASE_HEIGHT = 512;
@@ -40,6 +40,24 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         leftPanel = new UIPanelLeftPowerups(assets, model, this);
         rightPanel = new UIPanelRightLeaderboard(assets, model, leaderboard, this);
         overlayPanel = new OverlayPanel(assets, model, leaderboard, this);
+
+        assets.preload(
+                "ui_overlay_dim_1920x1080.png",
+                "ui_menu_panel_640x420.png",
+                "ui_gameover_panel_640x420.png",
+                "ui_banner_520x120.png",
+                "ui_name_input_560x104.png",
+                "ui_name_input_focus_560x104.png",
+                "ui_button_normal_260x72.png",
+                "ui_button_hover_260x72.png",
+                "ui_button_pressed_260x72.png",
+                "ui_button_disabled_260x72.png",
+                "icon_hint_16.png",
+                "icon_bomb_16.png",
+                "icon_swap_16.png",
+                "icon_freeze_16.png",
+                "icon_laser_16.png",
+                "icon_shield_16.png");
 
         add(leftPanel, BorderLayout.WEST);
         add(gamePanel, BorderLayout.CENTER);

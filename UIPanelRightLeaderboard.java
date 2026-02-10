@@ -14,7 +14,7 @@ import java.util.List;
 public class UIPanelRightLeaderboard extends JPanel {
     private static final Color COLOR_TEXT = new Color(43, 253, 223);
     private static final Color COLOR_TEXT_MUTED = new Color(224, 230, 255);
-    private static final int BASE_WIDTH = 256;
+    private static final int BASE_WIDTH = 288;
     private static final int BASE_PADDING = 16;
     private static final int BASE_BUTTON_WIDTH = 260;
     private static final int BASE_BUTTON_HEIGHT = 72;
@@ -177,7 +177,7 @@ public class UIPanelRightLeaderboard extends JPanel {
             image = assets.getImage("ui_button_normal_260x72.png");
         }
         g2d.drawImage(image, rect.x, rect.y, rect.width, rect.height, null);
-        g2d.setColor(new Color(30, 30, 30));
+        g2d.setColor(new Color(245, 241, 235));
         g2d.setFont(getFont().deriveFont(Font.BOLD, (float) (14f * scale / 2f)));
         int textWidth = g2d.getFontMetrics().stringWidth(text);
         g2d.drawString(text, rect.x + (rect.width - textWidth) / 2, rect.y + rect.height / 2 + (int) Math.round(6 * scale / 2f));

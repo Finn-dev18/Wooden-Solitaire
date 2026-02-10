@@ -14,8 +14,8 @@ import java.util.Map;
 
 public class UIPanelLeftPowerups extends JPanel {
     private static final Color COLOR_TEXT = new Color(43, 253, 223);
-    private static final Color COLOR_TEXT_MUTED = new Color(171, 25, 111);
-    private static final int BASE_WIDTH = 256;
+    private static final Color COLOR_TEXT_MUTED = new Color(224, 230, 255);
+    private static final int BASE_WIDTH = 288;
     private static final int BASE_PADDING = 16;
     private static final int BASE_BUTTON_WIDTH = 260;
     private static final int BASE_BUTTON_HEIGHT = 72;
@@ -201,9 +201,10 @@ public class UIPanelLeftPowerups extends JPanel {
         }
         g2d.setColor(fill);
         g2d.fillRect(rect.x, rect.y, rect.width, rect.height);
-        g2d.setColor(COLOR_TEXT);
+        g2d.setColor(new Color(224, 230, 255));
         g2d.drawRect(rect.x, rect.y, rect.width - 1, rect.height - 1);
         g2d.setFont(getFont().deriveFont(Font.BOLD, 10f * fontScale));
+        g2d.setColor(new Color(245, 241, 235));
         String label = "BUY " + type.getCost();
         int textWidth = g2d.getFontMetrics().stringWidth(label);
         int textX = rect.x + (rect.width - textWidth) / 2;
