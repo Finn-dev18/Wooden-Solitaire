@@ -18,7 +18,7 @@ public class OverlayPanel extends JPanel {
     private static final Color COLOR_TEXT = new Color(245, 241, 235);
     private static final Color COLOR_TEXT_MUTED = new Color(224, 230, 255);
     private static final Color COLOR_TEXT_DARK = new Color(245, 241, 235);
-    private static final Color COLOR_TEXT_INPUT = new Color(30, 30, 30);
+    private static final Color COLOR_TEXT_INPUT = new Color(245, 241, 235);
     private static final int MAX_NAME_LENGTH = 12;
 
     private final AssetManager assets;
@@ -280,7 +280,7 @@ public class OverlayPanel extends JPanel {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         drawDimLayer(g2d);
         drawPanelAndContents(g2d);
@@ -400,16 +400,16 @@ public class OverlayPanel extends JPanel {
         g2d.drawImage(inputImage, inputX, inputY, inputWidth, inputHeight, null);
 
         String text = nameInput == null ? "" : nameInput;
-        g2d.setFont(getFont().deriveFont(Font.BOLD, 14f * fontScale));
+        g2d.setFont(getFont().deriveFont(Font.BOLD, 13f * fontScale));
         g2d.setColor(COLOR_TEXT_INPUT);
         int textX = inputX + (int) Math.round(24 * controller.getScale());
-        int textY = inputY + (int) Math.round(58 * controller.getScale());
+        int textY = inputY + (int) Math.round(61 * controller.getScale());
         g2d.drawString(text, textX, textY);
 
         if (nameInputFocused && cursorOn) {
             int textWidth = g2d.getFontMetrics().stringWidth(text);
             int cursorX = textX + textWidth + (int) Math.round(4 * controller.getScale());
-            int cursorY = textY - (int) Math.round(12 * controller.getScale());
+            int cursorY = textY - (int) Math.round(11 * controller.getScale());
             g2d.fillRect(cursorX, cursorY, (int) Math.round(2 * controller.getScale()), (int) Math.round(14 * controller.getScale()));
         }
     }
@@ -447,21 +447,42 @@ public class OverlayPanel extends JPanel {
         if (disabled) {
             image = assets.getImage("ui_button_disabled_260x72.png");
         } else if (pressed == button) {
-            image = assets.getImage("ui_button_pressed_260x72.png");
+            image = assets.getImage(getPressedAsset(button));
         } else if (hovered == button) {
-            image = assets.getImage("ui_button_hover_260x72.png");
+            image = assets.getImage(getHoverAsset(button));
         } else {
-            image = assets.getImage("ui_button_normal_260x72.png");
+            image = assets.getImage(getNormalAsset(button));
         }
         g2d.drawImage(image, rect.x, rect.y, rect.width, rect.height, null);
 
         g2d.setFont(getFont().deriveFont(Font.BOLD, 14f * (float) controller.getScale()));
-        g2d.setColor(COLOR_TEXT_DARK);
+        g2d.setColor(new Color(245, 241, 235));
         String label = button.getLabel();
         int textWidth = g2d.getFontMetrics().stringWidth(label);
         int textX = rect.x + (rect.width - textWidth) / 2;
         int textY = rect.y + rect.height / 2 + (int) Math.round(6 * controller.getScale());
         g2d.drawString(label, textX, textY);
+    }
+
+    private String getNormalAsset(OverlayButton button) {
+        if (button == OverlayButton.MENU || button == OverlayButton.RESTART) {
+            return "menu_button_normal_240x64.png";
+        }
+        return "ui_button_normal_260x72.png";
+    }
+
+    private String getHoverAsset(OverlayButton button) {
+        if (button == OverlayButton.MENU || button == OverlayButton.RESTART) {
+            return "menu_button_hover_240x64.png";
+        }
+        return "ui_button_hover_260x72.png";
+    }
+
+    private String getPressedAsset(OverlayButton button) {
+        if (button == OverlayButton.MENU || button == OverlayButton.RESTART) {
+            return "menu_button_pressed_240x64.png";
+        }
+        return "ui_button_pressed_260x72.png";
     }
 
     enum OverlayButton {
@@ -484,3 +505,4 @@ public class OverlayPanel extends JPanel {
         }
     }
 }
+
