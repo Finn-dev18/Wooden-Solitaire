@@ -15,7 +15,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final Color COLOR_BG = new Color(39, 30, 112);
     private static final int BASE_LEFT_WIDTH = 220;
     private static final int BASE_RIGHT_WIDTH = 240;
-    private static final int BASE_BOARD = 256;
+    private static final int BASE_BOARD = 320;
     private static final int BASE_GAP = 28;
     private static final int BASE_HEIGHT = 512;
 
