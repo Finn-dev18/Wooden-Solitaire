@@ -20,8 +20,6 @@ public class UIPanelLeftPowerups extends JPanel {
     private static final int BASE_BUTTON_WIDTH = 260;
     private static final int BASE_BUTTON_HEIGHT = 72;
     private static final int BASE_ICON_SIZE = 16;
-    private static final int BASE_BUY_WIDTH = 56;
-    private static final int BASE_BUY_HEIGHT = 26;
 
     private final AssetManager assets;
     private final GameModel model;
@@ -29,10 +27,7 @@ public class UIPanelLeftPowerups extends JPanel {
     private int scale = 2;
     private PowerupType hovered;
     private PowerupType pressed;
-    private PowerupType hoveredBuy;
-    private PowerupType pressedBuy;
     private final Map<PowerupType, Rectangle> buttonRects = new EnumMap<>(PowerupType.class);
-    private final Map<PowerupType, Rectangle> buyRects = new EnumMap<>(PowerupType.class);
 
     public UIPanelLeftPowerups(AssetManager assets, GameModel model, GameUIController controller) {
         this.assets = assets;
@@ -42,13 +37,8 @@ public class UIPanelLeftPowerups extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if (controller.isOverlayActive()) {
-                    return;
-                }
-                pressedBuy = findBuyButton(e.getX(), e.getY());
-                if (pressedBuy == null) {
-                    pressed = findButton(e.getX(), e.getY());
-                }
+                if (controller.isOverlayActive()) return;
+                pressed = findButton(e.getX(), e.getY());
                 repaint();
             }
 
@@ -56,30 +46,21 @@ public class UIPanelLeftPowerups extends JPanel {
             public void mouseReleased(MouseEvent e) {
                 if (controller.isOverlayActive()) {
                     pressed = null;
-                    pressedBuy = null;
                     repaint();
                     return;
                 }
-                PowerupType releasedBuy = findBuyButton(e.getX(), e.getY());
-                if (pressedBuy != null && pressedBuy == releasedBuy) {
-                    model.purchasePowerup(releasedBuy);
+                PowerupType released = findButton(e.getX(), e.getY());
+                if (pressed != null && pressed == released) {
+                    model.activatePowerup(released);
                     controller.onModelUpdated();
-                } else {
-                    PowerupType released = findButton(e.getX(), e.getY());
-                    if (pressed != null && pressed == released) {
-                        model.activatePowerup(released);
-                        controller.onModelUpdated();
-                    }
                 }
                 pressed = null;
-                pressedBuy = null;
                 repaint();
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
                 hovered = null;
-                hoveredBuy = null;
                 repaint();
             }
         });
@@ -88,12 +69,10 @@ public class UIPanelLeftPowerups extends JPanel {
             public void mouseMoved(MouseEvent e) {
                 if (controller.isOverlayActive()) {
                     hovered = null;
-                    hoveredBuy = null;
                     repaint();
                     return;
                 }
                 hovered = findButton(e.getX(), e.getY());
-                hoveredBuy = findBuyButton(e.getX(), e.getY());
                 repaint();
             }
         });
@@ -108,18 +87,7 @@ public class UIPanelLeftPowerups extends JPanel {
 
     private PowerupType findButton(int x, int y) {
         for (Map.Entry<PowerupType, Rectangle> entry : buttonRects.entrySet()) {
-            if (entry.getValue().contains(x, y)) {
-                return entry.getKey();
-            }
-        }
-        return null;
-    }
-
-    private PowerupType findBuyButton(int x, int y) {
-        for (Map.Entry<PowerupType, Rectangle> entry : buyRects.entrySet()) {
-            if (entry.getValue().contains(x, y)) {
-                return entry.getKey();
-            }
+            if (entry.getValue().contains(x, y)) return entry.getKey();
         }
         return null;
     }
@@ -136,8 +104,6 @@ public class UIPanelLeftPowerups extends JPanel {
         int buttonWidth = (int) Math.round(BASE_BUTTON_WIDTH * scale);
         int buttonHeight = (int) Math.round(BASE_BUTTON_HEIGHT * scale);
         int iconSize = (int) Math.round(BASE_ICON_SIZE * scale);
-        int buyWidth = (int) Math.round(BASE_BUY_WIDTH * scale);
-        int buyHeight = (int) Math.round(BASE_BUY_HEIGHT * scale);
         int x = Math.max(padding / 2, (getWidth() - buttonWidth) / 2);
         int y = padding;
         float fontScale = (float) (scale / 2.0);
@@ -151,11 +117,10 @@ public class UIPanelLeftPowerups extends JPanel {
         y += padding + (int) Math.round(12 * scale);
 
         g2d.setFont(getFont().deriveFont(Font.PLAIN, 11f * fontScale));
-        g2d.drawString("Credits: " + model.getCredits(), x, y + (int) Math.round(9 * scale));
+        g2d.drawString("Hotkeys: 1..5", x, y + (int) Math.round(9 * scale));
         y += padding;
 
         buttonRects.clear();
-        buyRects.clear();
         for (PowerupType type : PowerupType.values()) {
             Rectangle rect = new Rectangle(x, y, buttonWidth, buttonHeight);
             buttonRects.put(type, rect);
@@ -169,19 +134,16 @@ public class UIPanelLeftPowerups extends JPanel {
 
             g2d.setFont(getFont().deriveFont(Font.BOLD, 11f * fontScale));
             g2d.setColor(COLOR_TEXT);
-            g2d.drawString(type.getLabel(), iconX + iconSize + padding, rect.y + rect.height / 2 + (int) Math.round(4 * scale));
+            g2d.drawString(type.getLabel(), iconX + iconSize + padding, rect.y + rect.height / 2 + (int) Math.round(1 * scale));
 
-            g2d.setFont(getFont().deriveFont(Font.PLAIN, 10f * fontScale));
+            g2d.setFont(getFont().deriveFont(Font.PLAIN, 9f * fontScale));
             g2d.setColor(COLOR_TEXT_MUTED);
-            int charges = model.getCharges().getOrDefault(type, 0);
-            String chargeText = "x" + charges;
-            int chargeWidth = g2d.getFontMetrics().stringWidth(chargeText);
-            Rectangle buyRect = new Rectangle(rect.x + rect.width - padding - buyWidth, rect.y + padding / 2, buyWidth, buyHeight);
-            int chargeX = rect.x + rect.width - padding - buyWidth - padding - chargeWidth;
-            g2d.drawString(chargeText, chargeX, rect.y + rect.height / 2 + (int) Math.round(4 * scale));
+            g2d.drawString(type.getDescription(), iconX + iconSize + padding, rect.y + rect.height / 2 + (int) Math.round(12 * scale));
 
-            buyRects.put(type, buyRect);
-            drawBuyButton(g2d, buyRect, type, fontScale, hoveredBuy == type, pressedBuy == type);
+            int charges = model.getCharges().getOrDefault(type, 0);
+            String chargeText = "x" + charges + "/5";
+            int chargeWidth = g2d.getFontMetrics().stringWidth(chargeText);
+            g2d.drawString(chargeText, rect.x + rect.width - padding - chargeWidth, rect.y + rect.height / 2 + (int) Math.round(1 * scale));
 
             if (model.getActivePowerup() == type) {
                 g2d.setColor(new Color(252, 16, 87));
@@ -194,50 +156,26 @@ public class UIPanelLeftPowerups extends JPanel {
         g2d.dispose();
     }
 
-    private void drawBuyButton(Graphics2D g2d, Rectangle rect, PowerupType type, float fontScale, boolean hover, boolean pressed) {
-        Color fill = hover ? new Color(70, 55, 150) : new Color(53, 42, 140);
-        if (pressed) {
-            fill = new Color(30, 25, 120);
-        }
-        g2d.setColor(fill);
-        g2d.fillRect(rect.x, rect.y, rect.width, rect.height);
-        g2d.setColor(new Color(224, 230, 255));
-        g2d.drawRect(rect.x, rect.y, rect.width - 1, rect.height - 1);
-        g2d.setFont(getFont().deriveFont(Font.BOLD, 9f * fontScale));
-        g2d.setColor(new Color(245, 241, 235));
-        String label = "BUY " + type.getCost();
-        int textWidth = g2d.getFontMetrics().stringWidth(label);
-        int textX = rect.x + (rect.width - textWidth) / 2;
-        int textY = rect.y + rect.height / 2 + (int) Math.round(4 * scale / 2);
-        g2d.drawString(label, textX, textY);
-    }
-
     private BufferedImage getButtonImage(PowerupType type) {
-        if (pressed == type) {
-            return assets.getImage("ui_button_pressed_260x72.png");
-        }
-        if (hovered == type) {
-            return assets.getImage("ui_button_hover_260x72.png");
-        }
+        if (pressed == type) return assets.getImage("ui_button_pressed_260x72.png");
+        if (hovered == type) return assets.getImage("ui_button_hover_260x72.png");
         return assets.getImage("ui_button_normal_260x72.png");
     }
 
     private String getIconName(PowerupType type) {
         switch (type) {
-            case HINT:
+            case UNDO:
                 return "icon_hint_16.png";
             case BOMB:
                 return "icon_bomb_16.png";
             case SWAP:
                 return "icon_swap_16.png";
-            case FREEZE:
-                return "icon_freeze_16.png";
-            case LASER:
+            case BRIDGEJUMP:
                 return "icon_laser_16.png";
-            case SHIELD:
-                return "icon_shield_16.png";
+            case RANDSTURM:
+                return "icon_freeze_16.png";
             default:
-                return "icon_hint_16.png";
+                return "icon_swap_16.png";
         }
     }
 }

@@ -1,24 +1,23 @@
 public enum PowerupType {
-    HINT("Hint", 1),
-    BOMB("Bomb", 6),
-    SWAP("Swap", 4),
-    FREEZE("Freeze", 5),
-    LASER("Laser", 7),
-    SHIELD("Shield", 5);
+    UNDO("Undo", "Macht die letzte Brettänderung rückgängig."),
+    SWAP("Swap", "Wähle 2 Felder und tausche deren Inhalt."),
+    BOMB("Bomb", "Entfernt eine Kugel auf dem gewählten Feld."),
+    BRIDGEJUMP("Bridge Jump", "Spezialsprung über Distanz 4 mit zwei übersprungenen Kugeln."),
+    RANDSTURM("Randsturm", "Schiebt alle Kugeln zufällig zu einer Wand.");
 
     private final String label;
-    private final int cost;
+    private final String description;
 
-    PowerupType(String label, int cost) {
+    PowerupType(String label, String description) {
         this.label = label;
-        this.cost = cost;
+        this.description = description;
     }
 
     public String getLabel() {
         return label;
     }
 
-    public int getCost() {
-        return cost;
+    public String getDescription() {
+        return description;
     }
 }

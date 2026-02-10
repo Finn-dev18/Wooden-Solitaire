@@ -6,9 +6,10 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 
 public class GamePanel extends JPanel {
     private static final Color COLOR_BG = new Color(39, 30, 112);
@@ -32,9 +33,7 @@ public class GamePanel extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if (controller.isOverlayActive()) {
-                    return;
-                }
+                if (controller.isOverlayActive()) return;
                 handleClick(e.getX(), e.getY());
             }
         });
@@ -70,9 +69,7 @@ public class GamePanel extends JPanel {
         for (int r = 0; r < GameModel.BOARD_SIZE; r++) {
             for (int c = 0; c < GameModel.BOARD_SIZE; c++) {
                 Rectangle rect = slotRects[r][c];
-                if (rect != null && rect.contains(x, y)) {
-                    return new Point(r, c);
-                }
+                if (rect != null && rect.contains(x, y)) return new Point(r, c);
             }
         }
         return null;
@@ -91,17 +88,15 @@ public class GamePanel extends JPanel {
                 }
             }
         }
-        if (row < 0) {
-            return;
-        }
-        if (model.getActivePowerup() != null && model.getActivePowerup() != PowerupType.HINT) {
+        if (row < 0) return;
+
+        if (model.getActivePowerup() != null) {
             model.applyPowerupClick(row, col);
-            if (model.getActivePowerup() == PowerupType.LASER && model.hasLaserPending()) {
-                controller.requestLaserDirection();
-            }
+            Toolkit.getDefaultToolkit().beep();
             controller.onModelUpdated();
             return;
         }
+
         boolean[][] validTargets = model.getValidTargets();
         if (validTargets[row][col]) {
             model.applyMove(row, col);
@@ -139,7 +134,6 @@ public class GamePanel extends JPanel {
         BufferedImage slotImage = assets.getImage("slot_empty_32.png");
         BufferedImage hoverImage = assets.getImage("slot_hover_32.png");
         BufferedImage pegNormal = assets.getImage("peg_normal_32.png");
-        BufferedImage pegSpecial = assets.getImage("peg_special_32.png");
         BufferedImage overlaySelected = assets.getImage("overlay_selected_32.png");
         BufferedImage overlayTarget = assets.getImage("overlay_target_32.png");
 
@@ -159,15 +153,10 @@ public class GamePanel extends JPanel {
 
         for (int r = 0; r < GameModel.BOARD_SIZE; r++) {
             for (int c = 0; c < GameModel.BOARD_SIZE; c++) {
-                if (!model.hasPeg(r, c)) {
-                    continue;
-                }
+                if (!model.hasPeg(r, c)) continue;
                 Rectangle slotRect = slotRects[r][c];
-                if (slotRect == null) {
-                    continue;
-                }
-                BufferedImage pegImage = model.isShielded(r, c) ? pegSpecial : pegNormal;
-                g2d.drawImage(pegImage, slotRect.x, slotRect.y, slotRect.width, slotRect.height, null);
+                if (slotRect == null) continue;
+                g2d.drawImage(pegNormal, slotRect.x, slotRect.y, slotRect.width, slotRect.height, null);
             }
         }
 
@@ -180,9 +169,7 @@ public class GamePanel extends JPanel {
 
         if (model.getSelectedRow() >= 0) {
             Rectangle selected = slotRects[model.getSelectedRow()][model.getSelectedCol()];
-            if (selected != null) {
-                g2d.drawImage(overlaySelected, selected.x, selected.y, selected.width, selected.height, null);
-            }
+            if (selected != null) g2d.drawImage(overlaySelected, selected.x, selected.y, selected.width, selected.height, null);
         }
 
         boolean[][] targets = model.getValidTargets();
@@ -190,38 +177,39 @@ public class GamePanel extends JPanel {
             for (int c = 0; c < GameModel.BOARD_SIZE; c++) {
                 if (targets[r][c]) {
                     Rectangle target = slotRects[r][c];
-                    if (target != null) {
-                        g2d.drawImage(overlayTarget, target.x, target.y, target.width, target.height, null);
-                    }
+                    if (target != null) g2d.drawImage(overlayTarget, target.x, target.y, target.width, target.height, null);
                 }
             }
         }
 
-        if (model.getSwapRow() >= 0) {
-            Rectangle swap = slotRects[model.getSwapRow()][model.getSwapCol()];
-            if (swap != null) {
-                g2d.drawImage(overlaySelected, swap.x, swap.y, swap.width, swap.height, null);
-            }
+        if (model.getSelectionRow() >= 0) {
+            Rectangle powerSel = slotRects[model.getSelectionRow()][model.getSelectionCol()];
+            if (powerSel != null) g2d.drawImage(overlaySelected, powerSel.x, powerSel.y, powerSel.width, powerSel.height, null);
         }
 
-        if (model.hasLaserPending()) {
-            Rectangle laser = slotRects[model.getLaserRow()][model.getLaserCol()];
-            if (laser != null) {
-                g2d.drawImage(overlayTarget, laser.x, laser.y, laser.width, laser.height, null);
-            }
-        }
-
-        if (model.hasHintHighlight()) {
-            Rectangle hintFrom = slotRects[model.getHintFromRow()][model.getHintFromCol()];
-            Rectangle hintTo = slotRects[model.getHintToRow()][model.getHintToCol()];
-            if (hintFrom != null) {
-                g2d.drawImage(overlaySelected, hintFrom.x, hintFrom.y, hintFrom.width, hintFrom.height, null);
-            }
-            if (hintTo != null) {
-                g2d.drawImage(overlayTarget, hintTo.x, hintTo.y, hintTo.width, hintTo.height, null);
-            }
-        }
-
+        drawStatus(g2d);
+        drawToast(g2d);
         g2d.dispose();
+    }
+
+    private void drawStatus(Graphics2D g2d) {
+        g2d.setColor(new Color(12, 9, 48, 220));
+        g2d.fillRect(12, 12, getWidth() - 24, 24 * scale);
+        g2d.setColor(new Color(224, 230, 255));
+        g2d.setFont(getFont().deriveFont((float) (11f * scale / 2f)));
+        g2d.drawString(model.getStatusMessage(), 20, 12 + 14 * scale / 2);
+    }
+
+    private void drawToast(Graphics2D g2d) {
+        if (!model.hasToast()) return;
+        int width = getWidth() - 80;
+        int height = 30 * scale;
+        int x = 40;
+        int y = getHeight() - height - 20;
+        g2d.setColor(new Color(252, 16, 87, 220));
+        g2d.fillRect(x, y, width, height);
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(getFont().deriveFont((float) (12f * scale / 2f)));
+        g2d.drawString(model.getToastMessage(), x + 12, y + height / 2 + 4);
     }
 }
