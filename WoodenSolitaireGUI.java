@@ -25,6 +25,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final int BASE_LEFT_WIDTH = 420;
     private static final int BASE_RIGHT_WIDTH = 360;
     private static final int UI_SCALE = 1;
+    private static final int GRID_SCALE = 3;
 
     private final AssetManager assets = new AssetManager();
     private final GameModel model = new GameModel();
@@ -146,6 +147,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         leftPanel.setScale(uiScale);
         rightPanel.setScale(uiScale);
         gamePanel.setUiScale(UI_SCALE);
+        gamePanel.setGridScale(GRID_SCALE);
         gamePanel.setBoardLayoutMargins(TOP_UI_MARGIN, CENTER_MARGIN);
         gamePanel.setBoardScale(boardScale);
 
