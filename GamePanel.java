@@ -178,6 +178,9 @@ public class GamePanel extends JPanel {
             Rectangle hoverRect = slotRects[hoverCell.x][hoverCell.y];
             if (hoverRect != null) {
                 g2d.drawImage(hoverImage, hoverRect.x, hoverRect.y, hoverRect.width, hoverRect.height, null);
+                if (model.hasPeg(hoverCell.x, hoverCell.y)) {
+                    g2d.drawImage(pegNormal, hoverRect.x, hoverRect.y, pegPx, pegPx, null);
+                }
             }
         }
 

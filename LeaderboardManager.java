@@ -4,7 +4,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,11 +30,26 @@ public class LeaderboardManager {
     }
 
     public void addEntry(Entry entry) {
-        entries.add(entry);
-        entries.sort(entryComparator());
-        if (entries.size() > 10) {
-            entries.subList(10, entries.size()).clear();
+        String normalizedName = normalizeName(entry.name());
+        Entry bestExisting = null;
+        for (Entry existing : entries) {
+            if (normalizeName(existing.name()).equals(normalizedName)) {
+                if (bestExisting == null || entryComparator().compare(existing, bestExisting) < 0) {
+                    bestExisting = existing;
+                }
+            }
         }
+
+        if (bestExisting != null) {
+            if (entryComparator().compare(entry, bestExisting) < 0) {
+                entries.removeIf(existing -> normalizeName(existing.name()).equals(normalizedName));
+                entries.add(new Entry(normalizedName, entry.score(), entry.pegsLeft(), entry.durationSeconds(), entry.timestamp(), entry.powerupsEnabled()));
+            }
+        } else {
+            entries.add(new Entry(normalizedName, entry.score(), entry.pegsLeft(), entry.durationSeconds(), entry.timestamp(), entry.powerupsEnabled()));
+        }
+
+        sortTrimTop10();
         save();
     }
 
@@ -60,13 +77,39 @@ public class LeaderboardManager {
                 boolean powerupsEnabled = Boolean.parseBoolean(matcher.group(6));
                 entries.add(new Entry(name, score, pegs, durationSeconds, timestamp, powerupsEnabled));
             }
-            entries.sort(entryComparator());
-            if (entries.size() > 10) {
-                entries.subList(10, entries.size()).clear();
-            }
+            deduplicateEntries();
+            sortTrimTop10();
+            save();
         } catch (IOException e) {
             // Ignore corrupted files.
         }
+    }
+
+
+    private void deduplicateEntries() {
+        Map<String, Entry> bestByName = new LinkedHashMap<>();
+        for (Entry entry : entries) {
+            String normalizedName = normalizeName(entry.name());
+            Entry normalizedEntry = new Entry(normalizedName, entry.score(), entry.pegsLeft(), entry.durationSeconds(), entry.timestamp(), entry.powerupsEnabled());
+            Entry currentBest = bestByName.get(normalizedName);
+            if (currentBest == null || entryComparator().compare(normalizedEntry, currentBest) < 0) {
+                bestByName.put(normalizedName, normalizedEntry);
+            }
+        }
+        entries.clear();
+        entries.addAll(bestByName.values());
+    }
+
+    private void sortTrimTop10() {
+        entries.sort(entryComparator());
+        if (entries.size() > 10) {
+            entries.subList(10, entries.size()).clear();
+        }
+    }
+
+    private String normalizeName(String name) {
+        String normalized = name == null ? "" : name.trim();
+        return normalized.isEmpty() ? "Player" : normalized;
     }
 
     private void save() {

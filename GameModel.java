@@ -47,7 +47,7 @@ public class GameModel {
         selectionCol = -1;
         activePowerup = null;
         gameOver = false;
-        startTimeMs = System.currentTimeMillis();
+        startTimeMs = 0;
         endTimeMs = 0;
         statusMessage = "Wähle eine Kugel für deinen Zug.";
         clearValidTargets();
@@ -78,11 +78,19 @@ public class GameModel {
     public String getToastMessage() { return toastMessage; }
     public String getPlayerName() { return playerName; }
 
+    public void startTimerNow() {
+        startTimeMs = System.currentTimeMillis();
+        endTimeMs = 0;
+    }
+
     public boolean hasToast() {
         return System.currentTimeMillis() < toastEndTime;
     }
 
     public Duration getElapsedDuration() {
+        if (startTimeMs <= 0) {
+            return Duration.ZERO;
+        }
         long endTime = endTimeMs > 0 ? endTimeMs : System.currentTimeMillis();
         if (endTime < startTimeMs) {
             return Duration.ZERO;
