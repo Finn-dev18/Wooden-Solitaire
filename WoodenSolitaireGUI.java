@@ -24,9 +24,9 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final int MIN_UI_SCALE = 1;
     private static final int MAX_UI_SCALE = 2;
     private static final int MIN_BOARD_SCALE = 1;
-    private static final int MAX_BOARD_SCALE = 6;
-    private static final int BOARD_MARGIN = 24;
-    private static final int TOP_BAR_HEIGHT = 0;
+    private static final int MAX_BOARD_SCALE = 4;
+    private static final int CENTER_MARGIN = 24;
+    private static final int TOP_UI_MARGIN = 64;
 
     private final AssetManager assets = new AssetManager();
     private final GameModel model = new GameModel();
@@ -142,8 +142,11 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         applyFixedPanelWidth(leftPanel, leftWidth);
         applyFixedPanelWidth(rightPanel, rightWidth);
 
-        int availableW = Math.max(1, frameWidth - leftWidth - rightWidth - (BOARD_MARGIN * 2));
-        int availableH = Math.max(1, frameHeight - TOP_BAR_HEIGHT - (BOARD_MARGIN * 2));
+        int centerWidth = Math.max(1, frameWidth - leftWidth - rightWidth);
+        int centerHeight = Math.max(1, frameHeight);
+
+        int availableW = Math.max(1, centerWidth - (CENTER_MARGIN * 2));
+        int availableH = Math.max(1, centerHeight - TOP_UI_MARGIN - (CENTER_MARGIN * 2));
         int nextBoardScale = Math.min(availableW / boardBasePx, availableH / boardBasePx);
         nextBoardScale = clamp(nextBoardScale, MIN_BOARD_SCALE, MAX_BOARD_SCALE);
 
@@ -153,6 +156,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         leftPanel.setScale(uiScale);
         rightPanel.setScale(uiScale);
         gamePanel.setUiScale(uiScale);
+        gamePanel.setBoardLayoutMargins(TOP_UI_MARGIN, CENTER_MARGIN);
         gamePanel.setBoardScale(boardScale);
 
         int boardSize = boardBasePx * boardScale;
@@ -161,7 +165,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
             boardSize = boardBasePx;
         }
 
-        Dimension boardDimension = new Dimension(boardSize, boardSize);
+        Dimension boardDimension = new Dimension(boardSize, TOP_UI_MARGIN + boardSize + CENTER_MARGIN);
         gamePanel.setPreferredSize(boardDimension);
         gamePanel.setMinimumSize(boardDimension);
         gamePanel.setMaximumSize(boardDimension);
@@ -186,7 +190,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         int leftWidth = BASE_LEFT_WIDTH * candidateUiScale;
         int rightWidth = BASE_RIGHT_WIDTH * candidateUiScale;
         int minimumBoardWidth = boardBasePx * MIN_BOARD_SCALE;
-        int requiredWidth = leftWidth + rightWidth + minimumBoardWidth + (BOARD_MARGIN * 2);
+        int requiredWidth = leftWidth + rightWidth + minimumBoardWidth + (CENTER_MARGIN * 2);
         return requiredWidth <= frameWidth;
     }
 
