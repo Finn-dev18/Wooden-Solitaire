@@ -1,5 +1,6 @@
 import javax.swing.JPanel;
 import java.awt.Color;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -7,7 +8,9 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 public class UIPanelLeftPowerups extends JPanel {
@@ -17,6 +20,9 @@ public class UIPanelLeftPowerups extends JPanel {
     private static final int BASE_BUTTON_WIDTH = 260;
     private static final int BASE_BUTTON_HEIGHT = 72;
     private static final int BASE_ICON_SIZE = 16;
+    private static final int BASE_CONTENT_PADDING = 18;
+    private static final int BASE_CHARGES_AREA_WIDTH = 64;
+    private static final int BASE_ICON_AREA_WIDTH = 34;
 
     private final AssetManager assets;
     private final GameModel model;
@@ -98,8 +104,13 @@ public class UIPanelLeftPowerups extends JPanel {
 
         int padding = (int) Math.round(BASE_PADDING * scale);
         int buttonWidth = (int) Math.round(BASE_BUTTON_WIDTH * scale);
-        int buttonHeight = (int) Math.round(BASE_BUTTON_HEIGHT * scale);
         int iconSize = (int) Math.round(BASE_ICON_SIZE * scale);
+        int contentPaddingLeft = (int) Math.round(BASE_CONTENT_PADDING * scale);
+        int contentPaddingRight = (int) Math.round(BASE_CONTENT_PADDING * scale);
+        int contentPaddingVertical = (int) Math.round(10 * scale);
+        int chargesAreaWidth = (int) Math.round(BASE_CHARGES_AREA_WIDTH * scale);
+        int iconAreaWidth = (int) Math.round(BASE_ICON_AREA_WIDTH * scale);
+
         int x = Math.max(padding / 2, (getWidth() - buttonWidth) / 2);
         int y = padding;
 
@@ -119,34 +130,53 @@ public class UIPanelLeftPowerups extends JPanel {
 
         buttonRects.clear();
         for (PowerupType type : PowerupType.values()) {
+            g2d.setFont(UIFonts.h2(scale));
+            FontMetrics titleFm = g2d.getFontMetrics();
+            int titleLineHeight = titleFm.getHeight() + 2;
+
+            g2d.setFont(UIFonts.body(scale));
+            FontMetrics bodyFm = g2d.getFontMetrics();
+            int bodyLineHeight = bodyFm.getHeight() + 2;
+
+            int minButtonHeight = contentPaddingVertical * 2 + titleLineHeight + (bodyLineHeight * 2);
+            int buttonHeight = Math.max((int) Math.round(BASE_BUTTON_HEIGHT * scale), minButtonHeight);
+
             Rectangle rect = new Rectangle(x, y, buttonWidth, buttonHeight);
             buttonRects.put(type, rect);
             BufferedImage buttonImage = getButtonImage(type);
             g2d.drawImage(buttonImage, rect.x, rect.y, rect.width, rect.height, null);
 
-            BufferedImage icon = assets.getImage(getIconName(type));
-            int iconX = rect.x + padding;
+            int iconX = rect.x + contentPaddingLeft;
             int iconY = rect.y + (rect.height - iconSize) / 2;
+            BufferedImage icon = assets.getImage(getIconName(type));
             g2d.drawImage(icon, iconX, iconY, iconSize, iconSize, null);
 
-            int textBaseX = iconX + iconSize + padding;
-            int textTopY = rect.y + padding;
+            int textBaseX = rect.x + contentPaddingLeft + iconAreaWidth;
+            int chargesAreaX = rect.x + rect.width - contentPaddingRight - chargesAreaWidth;
+            int maxTextWidth = chargesAreaX - textBaseX;
+            if (maxTextWidth < 0) {
+                maxTextWidth = 0;
+            }
+
+            int textTopY = rect.y + contentPaddingVertical;
 
             g2d.setFont(UIFonts.h2(scale));
-            int buttonLineHeight = g2d.getFontMetrics().getHeight() + 2;
             g2d.setColor(COLOR_TEXT);
-            g2d.drawString(type.getLabel(), textBaseX, textTopY + buttonLineHeight);
+            String title = fitWithEllipsis(type.getLabel(), g2d.getFontMetrics(), maxTextWidth);
+            int titleBaseline = textTopY + titleLineHeight;
+            g2d.drawString(title, textBaseX, titleBaseline);
 
             g2d.setFont(UIFonts.body(scale));
-            buttonLineHeight = g2d.getFontMetrics().getHeight() + 2;
             g2d.setColor(COLOR_TEXT_MUTED);
-            int descriptionY = textTopY + (g2d.getFontMetrics(UIFonts.h2(scale)).getHeight() + 2) + buttonLineHeight;
-            g2d.drawString(type.getDescription(), textBaseX, descriptionY);
+            int descriptionBaseline = titleBaseline + bodyLineHeight;
+            drawWrappedText(g2d, type.getDescription(), textBaseX, descriptionBaseline, maxTextWidth, 2, bodyLineHeight);
 
             int charges = model.getCharges().getOrDefault(type, 0);
             String chargeText = "x" + charges + "/5";
-            int chargeWidth = g2d.getFontMetrics().stringWidth(chargeText);
-            g2d.drawString(chargeText, rect.x + rect.width - padding - chargeWidth, textTopY + buttonLineHeight);
+            FontMetrics chargesFm = g2d.getFontMetrics();
+            int chargeWidth = chargesFm.stringWidth(chargeText);
+            int chargeX = chargesAreaX + Math.max(0, chargesAreaWidth - chargeWidth);
+            g2d.drawString(chargeText, chargeX, titleBaseline);
 
             if (model.getActivePowerup() == type) {
                 g2d.setColor(new Color(252, 16, 87));
@@ -157,6 +187,94 @@ public class UIPanelLeftPowerups extends JPanel {
         }
 
         g2d.dispose();
+    }
+
+    List<String> wrapLines(String text, FontMetrics fm, int maxWidth) {
+        List<String> lines = new ArrayList<>();
+        if (text == null || text.trim().isEmpty()) {
+            return lines;
+        }
+        if (maxWidth <= 0) {
+            lines.add("…");
+            return lines;
+        }
+
+        String[] words = text.trim().split("\\s+");
+        String currentLine = "";
+        for (String rawWord : words) {
+            String word = rawWord;
+            if (fm.stringWidth(word) > maxWidth) {
+                word = fitWithEllipsis(word, fm, maxWidth);
+                if (!currentLine.isEmpty()) {
+                    lines.add(currentLine);
+                    currentLine = "";
+                }
+                lines.add(word);
+                continue;
+            }
+
+            String candidate = currentLine.isEmpty() ? word : currentLine + " " + word;
+            if (fm.stringWidth(candidate) <= maxWidth) {
+                currentLine = candidate;
+            } else {
+                if (!currentLine.isEmpty()) {
+                    lines.add(currentLine);
+                }
+                currentLine = word;
+            }
+        }
+
+        if (!currentLine.isEmpty()) {
+            lines.add(currentLine);
+        }
+
+        return lines;
+    }
+
+    void drawWrappedText(Graphics2D g, String text, int x, int y, int maxWidth, int maxLines, int lineHeight) {
+        FontMetrics fm = g.getFontMetrics();
+        List<String> wrapped = wrapLines(text, fm, maxWidth);
+        boolean isTruncated = wrapped.size() > maxLines;
+        int linesToDraw = Math.min(maxLines, wrapped.size());
+
+        for (int i = 0; i < linesToDraw; i++) {
+            String line = wrapped.get(i);
+            if (i == linesToDraw - 1 && isTruncated) {
+                line = fitWithEllipsis(line, fm, maxWidth, true);
+            } else {
+                line = fitWithEllipsis(line, fm, maxWidth);
+            }
+            g.drawString(line, x, y + (i * lineHeight));
+        }
+    }
+
+    private String fitWithEllipsis(String text, FontMetrics fm, int maxWidth) {
+        return fitWithEllipsis(text, fm, maxWidth, false);
+    }
+
+    private String fitWithEllipsis(String text, FontMetrics fm, int maxWidth, boolean forceEllipsis) {
+        if (text == null) {
+            return "";
+        }
+        if (maxWidth <= 0) {
+            return "";
+        }
+
+        String ellipsis = "…";
+        int ellipsisWidth = fm.stringWidth(ellipsis);
+        boolean needsTrim = forceEllipsis || fm.stringWidth(text) > maxWidth;
+        if (!needsTrim) {
+            return text;
+        }
+        if (ellipsisWidth >= maxWidth) {
+            return ellipsis;
+        }
+
+        StringBuilder sb = new StringBuilder(text);
+        while (sb.length() > 0 && fm.stringWidth(sb + ellipsis) > maxWidth) {
+            sb.setLength(sb.length() - 1);
+        }
+        return sb + ellipsis;
     }
 
     private BufferedImage getButtonImage(PowerupType type) {
