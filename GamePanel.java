@@ -129,7 +129,7 @@ public class GamePanel extends JPanel {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         BoardMetrics metrics = calculateBoardMetrics();
         int boardPx = metrics.boardPx;
@@ -211,8 +211,9 @@ public class GamePanel extends JPanel {
         int statusHeight = Math.max(30, topUiMargin - 20);
         g2d.fillRect(12, 12, getWidth() - 24, statusHeight);
         g2d.setColor(new Color(224, 230, 255));
-        g2d.setFont(getFont().deriveFont((float) (11f * uiScale)));
-        g2d.drawString(model.getStatusMessage(), 20, 12 + Math.max(16, statusHeight / 2));
+        g2d.setFont(UIFonts.message(uiScale));
+        int lineHeight = g2d.getFontMetrics().getHeight() + 2;
+        g2d.drawString(model.getStatusMessage(), 20, 12 + Math.max(lineHeight, statusHeight / 2));
     }
 
     private void drawToast(Graphics2D g2d) {
@@ -224,8 +225,9 @@ public class GamePanel extends JPanel {
         g2d.setColor(new Color(252, 16, 87, 220));
         g2d.fillRect(x, y, width, height);
         g2d.setColor(Color.WHITE);
-        g2d.setFont(getFont().deriveFont((float) (12f * uiScale)));
-        g2d.drawString(model.getToastMessage(), x + 12, y + height / 2 + 4);
+        g2d.setFont(UIFonts.message(uiScale));
+        int lineHeight = g2d.getFontMetrics().getHeight() + 2;
+        g2d.drawString(model.getToastMessage(), x + 12, y + Math.max(lineHeight, height / 2 + 4));
     }
 
     private Point mapPointToCell(int x, int y) {

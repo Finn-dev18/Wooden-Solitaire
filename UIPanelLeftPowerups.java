@@ -1,6 +1,5 @@
 import javax.swing.JPanel;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -95,7 +94,7 @@ public class UIPanelLeftPowerups extends JPanel {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         int padding = (int) Math.round(BASE_PADDING * scale);
         int buttonWidth = (int) Math.round(BASE_BUTTON_WIDTH * scale);
@@ -103,19 +102,20 @@ public class UIPanelLeftPowerups extends JPanel {
         int iconSize = (int) Math.round(BASE_ICON_SIZE * scale);
         int x = Math.max(padding / 2, (getWidth() - buttonWidth) / 2);
         int y = padding;
-        float fontScale = (float) scale;
 
         g2d.setColor(new Color(21, 16, 68));
         g2d.fillRect(0, 0, getWidth(), getHeight());
 
         g2d.setColor(COLOR_TEXT);
-        g2d.setFont(getFont().deriveFont(Font.BOLD, 14f * fontScale));
-        g2d.drawString("POWERUPS", x, y + (int) Math.round(12 * scale));
-        y += padding + (int) Math.round(12 * scale);
+        g2d.setFont(UIFonts.h1(scale));
+        int lineHeight = g2d.getFontMetrics().getHeight() + 2;
+        g2d.drawString("POWERUPS", x, y + lineHeight);
+        y += lineHeight + padding;
 
-        g2d.setFont(getFont().deriveFont(Font.PLAIN, 11f * fontScale));
-        g2d.drawString("Hotkeys: 1..5", x, y + (int) Math.round(9 * scale));
-        y += padding;
+        g2d.setFont(UIFonts.small(scale));
+        lineHeight = g2d.getFontMetrics().getHeight() + 2;
+        g2d.drawString("Hotkeys: 1..5", x, y + lineHeight);
+        y += lineHeight;
 
         buttonRects.clear();
         for (PowerupType type : PowerupType.values()) {
@@ -129,18 +129,24 @@ public class UIPanelLeftPowerups extends JPanel {
             int iconY = rect.y + (rect.height - iconSize) / 2;
             g2d.drawImage(icon, iconX, iconY, iconSize, iconSize, null);
 
-            g2d.setFont(getFont().deriveFont(Font.BOLD, 11f * fontScale));
-            g2d.setColor(COLOR_TEXT);
-            g2d.drawString(type.getLabel(), iconX + iconSize + padding, rect.y + rect.height / 2 + (int) Math.round(1 * scale));
+            int textBaseX = iconX + iconSize + padding;
+            int textTopY = rect.y + padding;
 
-            g2d.setFont(getFont().deriveFont(Font.PLAIN, 9f * fontScale));
+            g2d.setFont(UIFonts.h2(scale));
+            int buttonLineHeight = g2d.getFontMetrics().getHeight() + 2;
+            g2d.setColor(COLOR_TEXT);
+            g2d.drawString(type.getLabel(), textBaseX, textTopY + buttonLineHeight);
+
+            g2d.setFont(UIFonts.body(scale));
+            buttonLineHeight = g2d.getFontMetrics().getHeight() + 2;
             g2d.setColor(COLOR_TEXT_MUTED);
-            g2d.drawString(type.getDescription(), iconX + iconSize + padding, rect.y + rect.height / 2 + (int) Math.round(12 * scale));
+            int descriptionY = textTopY + (g2d.getFontMetrics(UIFonts.h2(scale)).getHeight() + 2) + buttonLineHeight;
+            g2d.drawString(type.getDescription(), textBaseX, descriptionY);
 
             int charges = model.getCharges().getOrDefault(type, 0);
             String chargeText = "x" + charges + "/5";
             int chargeWidth = g2d.getFontMetrics().stringWidth(chargeText);
-            g2d.drawString(chargeText, rect.x + rect.width - padding - chargeWidth, rect.y + rect.height / 2 + (int) Math.round(1 * scale));
+            g2d.drawString(chargeText, rect.x + rect.width - padding - chargeWidth, textTopY + buttonLineHeight);
 
             if (model.getActivePowerup() == type) {
                 g2d.setColor(new Color(252, 16, 87));

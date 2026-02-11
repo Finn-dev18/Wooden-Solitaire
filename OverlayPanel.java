@@ -1,7 +1,6 @@
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -323,34 +322,33 @@ public class OverlayPanel extends JPanel {
     }
 
     private void drawOverlayContent(Graphics2D g2d, Rectangle panelRect) {
-        float fontScale = (float) controller.getScale();
         int contentX = panelRect.x + (int) Math.round(40 * controller.getScale());
         int contentY = panelRect.y + (int) Math.round(150 * controller.getScale());
 
         if (state == OverlayState.PRE_GAME_NAME) {
-            drawPreGame(g2d, panelRect, contentX, contentY, fontScale);
+            drawPreGame(g2d, panelRect, contentX, contentY);
         } else if (state == OverlayState.MENU) {
-            drawMenu(g2d, panelRect, contentX, contentY, fontScale);
+            drawMenu(g2d, panelRect, contentX, contentY);
         } else if (state == OverlayState.GAME_OVER) {
-            drawGameOver(g2d, panelRect, contentX, contentY, fontScale);
+            drawGameOver(g2d, panelRect, contentX, contentY);
         }
     }
 
-    private void drawPreGame(Graphics2D g2d, Rectangle panelRect, int contentX, int contentY, float fontScale) {
+    private void drawPreGame(Graphics2D g2d, Rectangle panelRect, int contentX, int contentY) {
         g2d.setColor(COLOR_TEXT);
-        g2d.setFont(getFont().deriveFont(Font.BOLD, 16f * fontScale));
+        g2d.setFont(UIFonts.h1(controller.getScale()));
         g2d.drawString("PLAYER NAME", contentX, contentY);
 
         int inputY = contentY + (int) Math.round(24 * controller.getScale());
-        drawNameInput(g2d, panelRect, inputY, fontScale);
+        drawNameInput(g2d, panelRect, inputY);
 
         int buttonY = panelRect.y + panelRect.height - (int) Math.round(120 * controller.getScale());
         drawButtonRow(g2d, panelRect, buttonY, OverlayButton.START, OverlayButton.QUIT);
     }
 
-    private void drawMenu(Graphics2D g2d, Rectangle panelRect, int contentX, int contentY, float fontScale) {
+    private void drawMenu(Graphics2D g2d, Rectangle panelRect, int contentX, int contentY) {
         g2d.setColor(COLOR_TEXT);
-        g2d.setFont(getFont().deriveFont(Font.BOLD, 16f * fontScale));
+        g2d.setFont(UIFonts.h1(controller.getScale()));
         g2d.drawString("MENU", contentX, contentY);
 
         int buttonY = contentY + (int) Math.round(40 * controller.getScale());
@@ -361,24 +359,25 @@ public class OverlayPanel extends JPanel {
         });
     }
 
-    private void drawGameOver(Graphics2D g2d, Rectangle panelRect, int contentX, int contentY, float fontScale) {
+    private void drawGameOver(Graphics2D g2d, Rectangle panelRect, int contentX, int contentY) {
         g2d.setColor(COLOR_TEXT);
-        g2d.setFont(getFont().deriveFont(Font.BOLD, 16f * fontScale));
+        g2d.setFont(UIFonts.h1(controller.getScale()));
         g2d.drawString("GAME OVER", contentX, contentY);
 
         int statY = contentY + (int) Math.round(26 * controller.getScale());
-        g2d.setFont(getFont().deriveFont(Font.PLAIN, 12f * fontScale));
+        g2d.setFont(UIFonts.body(controller.getScale()));
         g2d.setColor(COLOR_TEXT_MUTED);
         g2d.drawString("Moves: " + model.getMovesCount(), contentX, statY);
-        statY += (int) Math.round(18 * controller.getScale());
+        int lineHeight = g2d.getFontMetrics().getHeight() + 2;
+        statY += lineHeight;
         g2d.drawString("Pegs: " + model.getPegsLeft(), contentX, statY);
-        statY += (int) Math.round(18 * controller.getScale());
+        statY += lineHeight;
         int score = ScoreCalculator.calculate(model.getElapsedDuration(), model.getPegsLeft(), model.getMovesCount());
         g2d.drawString("Score: " + score, contentX, statY);
 
         int inputY = statY + (int) Math.round(20 * controller.getScale());
         if (top10Candidate) {
-            drawNameInput(g2d, panelRect, inputY, fontScale);
+            drawNameInput(g2d, panelRect, inputY);
         }
 
         int buttonY = panelRect.y + panelRect.height - (int) Math.round(120 * controller.getScale());
@@ -391,7 +390,7 @@ public class OverlayPanel extends JPanel {
         }
     }
 
-    private void drawNameInput(Graphics2D g2d, Rectangle panelRect, int inputY, float fontScale) {
+    private void drawNameInput(Graphics2D g2d, Rectangle panelRect, int inputY) {
         BufferedImage inputImage = assets.getImage(nameInputFocused ? "ui_name_input_focus_560x104.png" : "ui_name_input_560x104.png");
         int inputWidth = (int) Math.round(inputImage.getWidth() * controller.getScale());
         int inputHeight = (int) Math.round(inputImage.getHeight() * controller.getScale());
@@ -400,7 +399,7 @@ public class OverlayPanel extends JPanel {
         g2d.drawImage(inputImage, inputX, inputY, inputWidth, inputHeight, null);
 
         String text = nameInput == null ? "" : nameInput;
-        g2d.setFont(getFont().deriveFont(Font.BOLD, 13f * fontScale));
+        g2d.setFont(UIFonts.h2(controller.getScale()));
         g2d.setColor(COLOR_TEXT_INPUT);
         int textX = inputX + (int) Math.round(24 * controller.getScale());
         int textY = inputY + (int) Math.round(61 * controller.getScale());
@@ -455,7 +454,7 @@ public class OverlayPanel extends JPanel {
         }
         g2d.drawImage(image, rect.x, rect.y, rect.width, rect.height, null);
 
-        g2d.setFont(getFont().deriveFont(Font.BOLD, 14f * (float) controller.getScale()));
+        g2d.setFont(UIFonts.h2(controller.getScale()));
         g2d.setColor(new Color(245, 241, 235));
         String label = button.getLabel();
         int textWidth = g2d.getFontMetrics().stringWidth(label);

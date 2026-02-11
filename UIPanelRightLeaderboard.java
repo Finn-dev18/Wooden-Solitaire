@@ -3,7 +3,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -70,7 +69,7 @@ public class UIPanelRightLeaderboard extends JPanel {
     private void applyPixelArtHints(Graphics2D g2d) {
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
     }
 
     private class StatsPanel extends JPanel {
@@ -86,43 +85,46 @@ public class UIPanelRightLeaderboard extends JPanel {
             applyPixelArtHints(g2d);
 
             int padding = (int) Math.round(BASE_PADDING * scale);
-            float fontScale = (float) (scale / 2.0);
             int x = padding;
             int y = padding;
 
             g2d.setColor(COLOR_TEXT);
-            g2d.setFont(getFont().deriveFont(Font.BOLD, 14f * fontScale));
-            g2d.drawString("STATS", x, y + (int) Math.round(12 * scale));
-            y += padding + (int) Math.round(12 * scale);
+            g2d.setFont(UIFonts.h1(scale));
+            int lineHeight = g2d.getFontMetrics().getHeight() + 2;
+            g2d.drawString("STATS", x, y + lineHeight);
+            y += lineHeight + 2;
 
-            g2d.setFont(getFont().deriveFont(Font.PLAIN, 9f * fontScale));
+            g2d.setFont(UIFonts.body(scale));
+            lineHeight = g2d.getFontMetrics().getHeight() + 2;
             g2d.setColor(COLOR_TEXT_MUTED);
             g2d.drawString("Züge: " + model.getMovesCount(), x, y);
-            y += padding;
+            y += lineHeight;
             g2d.drawString("Pegs: " + model.getPegsLeft(), x, y);
-            y += padding;
+            y += lineHeight;
             g2d.drawString("Zeit: " + formatDuration(model.getElapsedDuration()), x, y);
-            y += padding;
+            y += lineHeight;
             int score = ScoreCalculator.calculate(model.getElapsedDuration(), model.getPegsLeft(), model.getMovesCount());
             g2d.drawString("Punkte: " + score, x, y);
-            y += padding;
+            y += lineHeight;
             g2d.drawString("Spieler: " + model.getPlayerName(), x, y);
-            y += padding;
+            y += lineHeight;
             g2d.drawString("Credits: " + model.getCredits(), x, y);
-            y += padding;
+            y += lineHeight + 2;
 
             g2d.setColor(COLOR_TEXT);
-            g2d.setFont(getFont().deriveFont(Font.BOLD, 13f * fontScale));
+            g2d.setFont(UIFonts.h1(scale));
+            lineHeight = g2d.getFontMetrics().getHeight() + 2;
             g2d.drawString("LEADERBOARD", x, y);
-            y += padding;
+            y += lineHeight;
 
             List<LeaderboardManager.Entry> entries = leaderboard.getTop10();
-            g2d.setFont(getFont().deriveFont(Font.PLAIN, 9f * fontScale));
+            g2d.setFont(UIFonts.body(scale));
+            lineHeight = g2d.getFontMetrics().getHeight() + 2;
             for (int i = 0; i < entries.size(); i++) {
                 LeaderboardManager.Entry entry = entries.get(i);
                 String line = (i + 1) + ". " + entry.name() + " - " + entry.score() + " P / " + formatDuration(entry.durationSeconds()) + " / " + entry.pegsLeft() + " Pegs";
                 g2d.drawString(line, x, y);
-                y += Math.max(8, padding / 2);
+                y += lineHeight;
             }
 
             g2d.dispose();
@@ -239,7 +241,7 @@ public class UIPanelRightLeaderboard extends JPanel {
         }
         g2d.drawImage(image, rect.x, rect.y, rect.width, rect.height, null);
         g2d.setColor(new Color(245, 241, 235));
-        g2d.setFont(getFont().deriveFont(Font.BOLD, (float) (12f * scale / 2f)));
+        g2d.setFont(UIFonts.body(scale));
         int textWidth = g2d.getFontMetrics().stringWidth(text);
         g2d.drawString(text, rect.x + (rect.width - textWidth) / 2, rect.y + rect.height / 2 + (int) Math.round(6 * scale / 2f));
     }
