@@ -18,15 +18,15 @@ import java.awt.event.KeyEvent;
 public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final Color COLOR_BG = new Color(39, 30, 112);
 
-    private static final int BASE_LEFT_WIDTH = 340;
-    private static final int BASE_RIGHT_WIDTH = 340;
+    private static final int BASE_LEFT_WIDTH = 420;
+    private static final int BASE_RIGHT_WIDTH = 360;
     private static final int DEFAULT_BOARD_BASE_PX = 768;
     private static final int MIN_UI_SCALE = 1;
     private static final int MAX_UI_SCALE = 2;
     private static final int MIN_BOARD_SCALE = 1;
     private static final int MAX_BOARD_SCALE = 4;
-    private static final int CENTER_MARGIN = 24;
-    private static final int TOP_UI_MARGIN = 64;
+    private static final int CENTER_MARGIN = 32;
+    private static final int TOP_UI_MARGIN = 96;
 
     private final AssetManager assets = new AssetManager();
     private final GameModel model = new GameModel();
@@ -131,22 +131,16 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
             return;
         }
 
-        int nextUiScale = clamp(frameHeight / 360, MIN_UI_SCALE, MAX_UI_SCALE);
-        while (nextUiScale > MIN_UI_SCALE && !canFitBoardAtMinimumScale(frameWidth, nextUiScale)) {
-            nextUiScale--;
-        }
+        int nextUiScale = clamp(frameHeight / 900, MIN_UI_SCALE, MAX_UI_SCALE);
 
         int leftWidth = BASE_LEFT_WIDTH * nextUiScale;
         int rightWidth = BASE_RIGHT_WIDTH * nextUiScale;
 
-        applyFixedPanelWidth(leftPanel, leftWidth);
-        applyFixedPanelWidth(rightPanel, rightWidth);
+        applyFixedPanelWidth(leftPanel, leftWidth, frameHeight);
+        applyFixedPanelWidth(rightPanel, rightWidth, frameHeight);
 
-        int centerWidth = Math.max(1, frameWidth - leftWidth - rightWidth);
-        int centerHeight = Math.max(1, frameHeight);
-
-        int availableW = Math.max(1, centerWidth - (CENTER_MARGIN * 2));
-        int availableH = Math.max(1, centerHeight - TOP_UI_MARGIN - (CENTER_MARGIN * 2));
+        int availableW = Math.max(1, frameWidth - leftWidth - rightWidth - (CENTER_MARGIN * 2));
+        int availableH = Math.max(1, frameHeight - TOP_UI_MARGIN - (CENTER_MARGIN * 2));
         int nextBoardScale = Math.min(availableW / boardBasePx, availableH / boardBasePx);
         nextBoardScale = clamp(nextBoardScale, MIN_BOARD_SCALE, MAX_BOARD_SCALE);
 
@@ -186,17 +180,9 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         }
     }
 
-    private boolean canFitBoardAtMinimumScale(int frameWidth, int candidateUiScale) {
-        int leftWidth = BASE_LEFT_WIDTH * candidateUiScale;
-        int rightWidth = BASE_RIGHT_WIDTH * candidateUiScale;
-        int minimumBoardWidth = boardBasePx * MIN_BOARD_SCALE;
-        int requiredWidth = leftWidth + rightWidth + minimumBoardWidth + (CENTER_MARGIN * 2);
-        return requiredWidth <= frameWidth;
-    }
-
-    private void applyFixedPanelWidth(JPanel panel, int width) {
-        panel.setPreferredSize(new Dimension(width, 1));
-        panel.setMinimumSize(new Dimension(width, 1));
+    private void applyFixedPanelWidth(JPanel panel, int width, int frameHeight) {
+        panel.setPreferredSize(new Dimension(width, frameHeight));
+        panel.setMinimumSize(new Dimension(width, 0));
         panel.setMaximumSize(new Dimension(width, Integer.MAX_VALUE));
     }
 
