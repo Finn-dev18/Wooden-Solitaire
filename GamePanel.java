@@ -17,8 +17,6 @@ public class GamePanel extends JPanel {
     private static final int BASE_CELL_SIZE = 32;
     private static final int BASE_SLOT_SIZE = 32;
     private static final int BASE_PEG_SIZE = 32;
-    private static final int BASE_GRID_OFFSET_X = (BOARD_BASE_PX - (GameModel.BOARD_SIZE * BASE_CELL_SIZE)) / 2;
-    private static final int BASE_GRID_OFFSET_Y = (BOARD_BASE_PX - (GameModel.BOARD_SIZE * BASE_CELL_SIZE)) / 2;
     private static final int DEFAULT_TOP_UI_MARGIN = 96;
     private static final int DEFAULT_CENTER_MARGIN = 24;
 
@@ -27,6 +25,7 @@ public class GamePanel extends JPanel {
     private final GameUIController controller;
     private final int boardBasePx;
     private int boardScale = 1;
+    private int gridScale = 3;
     private int uiScale = 1;
     private int topUiMargin = DEFAULT_TOP_UI_MARGIN;
     private int centerMargin = DEFAULT_CENTER_MARGIN;
@@ -71,6 +70,11 @@ public class GamePanel extends JPanel {
         this.boardScale = Math.max(1, scale);
         updatePreferredSize();
         revalidate();
+        repaint();
+    }
+
+    public void setGridScale(int scale) {
+        this.gridScale = Math.max(1, Math.min(4, scale));
         repaint();
     }
 
@@ -135,11 +139,11 @@ public class GamePanel extends JPanel {
         BufferedImage boardImage = assets.getImage("board_octagon_768_sym.png");
         g2d.drawImage(boardImage, boardX, boardY, boardPx, boardPx, null);
 
-        int cellPx = BASE_CELL_SIZE * boardScale;
-        int slotPx = BASE_SLOT_SIZE * boardScale;
-        int pegPx = BASE_PEG_SIZE * boardScale;
-        int gridOffsetX = BASE_GRID_OFFSET_X * boardScale;
-        int gridOffsetY = BASE_GRID_OFFSET_Y * boardScale;
+        int cellPx = metrics.cellPx;
+        int slotPx = metrics.slotPx;
+        int pegPx = metrics.pegPx;
+        int gridOffsetX = metrics.gridOffsetX;
+        int gridOffsetY = metrics.gridOffsetY;
 
         BufferedImage slotImage = assets.getImage("slot_empty_32.png");
         BufferedImage hoverImage = assets.getImage("slot_hover_32.png");
@@ -207,7 +211,7 @@ public class GamePanel extends JPanel {
         int statusHeight = Math.max(30, topUiMargin - 20);
         g2d.fillRect(12, 12, getWidth() - 24, statusHeight);
         g2d.setColor(new Color(224, 230, 255));
-        g2d.setFont(getFont().deriveFont((float) (11f * uiScale / 2f)));
+        g2d.setFont(getFont().deriveFont((float) (11f * uiScale)));
         g2d.drawString(model.getStatusMessage(), 20, 12 + Math.max(16, statusHeight / 2));
     }
 
@@ -220,7 +224,7 @@ public class GamePanel extends JPanel {
         g2d.setColor(new Color(252, 16, 87, 220));
         g2d.fillRect(x, y, width, height);
         g2d.setColor(Color.WHITE);
-        g2d.setFont(getFont().deriveFont((float) (12f * uiScale / 2f)));
+        g2d.setFont(getFont().deriveFont((float) (12f * uiScale)));
         g2d.drawString(model.getToastMessage(), x + 12, y + height / 2 + 4);
     }
 
@@ -253,10 +257,13 @@ public class GamePanel extends JPanel {
         int boardPx = boardBasePx * boardScale;
         int boardX = (getWidth() - boardPx) / 2;
         int boardY = topUiMargin + ((getHeight() - topUiMargin - boardPx) / 2);
-        int cellPx = BASE_CELL_SIZE * boardScale;
-        int gridOffsetX = BASE_GRID_OFFSET_X * boardScale;
-        int gridOffsetY = BASE_GRID_OFFSET_Y * boardScale;
-        return new BoardMetrics(boardX, boardY, boardPx, cellPx, gridOffsetX, gridOffsetY);
+        int cellPx = BASE_CELL_SIZE * gridScale;
+        int slotPx = BASE_SLOT_SIZE * gridScale;
+        int pegPx = BASE_PEG_SIZE * gridScale;
+        int gridPx = GameModel.BOARD_SIZE * cellPx;
+        int gridOffsetX = (boardPx - gridPx) / 2;
+        int gridOffsetY = (boardPx - gridPx) / 2;
+        return new BoardMetrics(boardX, boardY, boardPx, cellPx, slotPx, pegPx, gridOffsetX, gridOffsetY);
     }
 
     private void updatePreferredSize() {
@@ -273,14 +280,19 @@ public class GamePanel extends JPanel {
         private final int boardY;
         private final int boardPx;
         private final int cellPx;
+        private final int slotPx;
+        private final int pegPx;
         private final int gridOffsetX;
         private final int gridOffsetY;
 
-        private BoardMetrics(int boardX, int boardY, int boardPx, int cellPx, int gridOffsetX, int gridOffsetY) {
+        private BoardMetrics(int boardX, int boardY, int boardPx, int cellPx, int slotPx, int pegPx,
+                             int gridOffsetX, int gridOffsetY) {
             this.boardX = boardX;
             this.boardY = boardY;
             this.boardPx = boardPx;
             this.cellPx = cellPx;
+            this.slotPx = slotPx;
+            this.pegPx = pegPx;
             this.gridOffsetX = gridOffsetX;
             this.gridOffsetY = gridOffsetY;
         }

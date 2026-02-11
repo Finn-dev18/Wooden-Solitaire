@@ -103,7 +103,7 @@ public class UIPanelLeftPowerups extends JPanel {
         int iconSize = (int) Math.round(BASE_ICON_SIZE * scale);
         int x = Math.max(padding / 2, (getWidth() - buttonWidth) / 2);
         int y = padding;
-        float fontScale = (float) (scale / 2.0);
+        float fontScale = (float) scale;
 
         g2d.setColor(new Color(21, 16, 68));
         g2d.fillRect(0, 0, getWidth(), getHeight());
