@@ -1,11 +1,15 @@
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -13,12 +17,15 @@ import java.awt.event.KeyEvent;
 
 public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final Color COLOR_BG = new Color(39, 30, 112);
-    private static final int BASE_LEFT_BUTTON_WIDTH = 260;
-    private static final int BASE_RIGHT_BUTTON_WIDTH = 260;
-    private static final int BASE_SIDE_PADDING = 16;
-    private static final int BASE_BOARD = 320;
-    private static final int BASE_GAP = 28;
-    private static final int BASE_HEIGHT = 512;
+
+    private static final int BASE_LEFT_WIDTH = 360;
+    private static final int BASE_RIGHT_WIDTH = 320;
+    private static final int BOARD_BASE_PX = 320;
+    private static final int MIN_UI_SCALE = 1;
+    private static final int MAX_UI_SCALE = 3;
+    private static final int MIN_BOARD_SCALE = 1;
+    private static final int MAX_BOARD_SCALE = 6;
+    private static final int BOARD_MARGIN = 24;
 
     private final AssetManager assets = new AssetManager();
     private final GameModel model = new GameModel();
@@ -27,7 +34,10 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private final UIPanelLeftPowerups leftPanel;
     private final UIPanelRightLeaderboard rightPanel;
     private final OverlayPanel overlayPanel;
-    private int scale = 2;
+    private final JPanel centerWrapper;
+
+    private int uiScale = 2;
+    private int boardScale = 2;
     private boolean gameOverHandled;
 
     public WoodenSolitaireGUI() {
@@ -41,6 +51,18 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         leftPanel = new UIPanelLeftPowerups(assets, model, this);
         rightPanel = new UIPanelRightLeaderboard(assets, model, leaderboard, this);
         overlayPanel = new OverlayPanel(assets, model, leaderboard, this);
+
+        centerWrapper = new JPanel(new GridBagLayout());
+        centerWrapper.setOpaque(true);
+        centerWrapper.setBackground(COLOR_BG);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.NONE;
+        centerWrapper.add(gamePanel, gbc);
 
         assets.preload(
                 "ui_overlay_dim_1920x1080.png",
@@ -63,7 +85,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
                 "icon_freeze_16.png");
 
         add(leftPanel, BorderLayout.WEST);
-        add(gamePanel, BorderLayout.CENTER);
+        add(centerWrapper, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
 
         setGlassPane(overlayPanel);
@@ -100,24 +122,48 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     }
 
     private void updateScale() {
-        int width = getWidth();
-        int height = getHeight();
-        if (width <= 0 || height <= 0) {
+        int frameWidth = getContentPane().getWidth();
+        int frameHeight = getContentPane().getHeight();
+        if (frameWidth <= 0 || frameHeight <= 0) {
             return;
         }
-        int baseLeftWidth = BASE_LEFT_BUTTON_WIDTH + (BASE_SIDE_PADDING * 2);
-        int baseRightWidth = BASE_RIGHT_BUTTON_WIDTH + (BASE_SIDE_PADDING * 2);
-        int baseWidth = baseLeftWidth + BASE_BOARD + baseRightWidth + BASE_GAP;
-        double scaleValue = Math.min(width / (double) baseWidth, height / (double) BASE_HEIGHT);
-        int nextScale = (int) Math.floor(scaleValue);
-        nextScale = Math.max(1, Math.min(6, nextScale));
-        if (nextScale != scale) {
-            scale = nextScale;
-        }
-        leftPanel.setScale(scale);
-        rightPanel.setScale(scale);
-        gamePanel.setScale(scale);
+
+        int nextUiScale = clamp(frameHeight / 360, MIN_UI_SCALE, MAX_UI_SCALE);
+        int leftWidth = BASE_LEFT_WIDTH * nextUiScale;
+        int rightWidth = BASE_RIGHT_WIDTH * nextUiScale;
+
+        applyFixedPanelWidth(leftPanel, leftWidth);
+        applyFixedPanelWidth(rightPanel, rightWidth);
+
+        int availableW = Math.max(BOARD_BASE_PX, frameWidth - leftWidth - rightWidth - (BOARD_MARGIN * 2));
+        int availableH = Math.max(BOARD_BASE_PX, frameHeight - (BOARD_MARGIN * 2));
+        int nextBoardScale = Math.min(availableW / BOARD_BASE_PX, availableH / BOARD_BASE_PX);
+        nextBoardScale = clamp(nextBoardScale, MIN_BOARD_SCALE, MAX_BOARD_SCALE);
+
+        uiScale = nextUiScale;
+        boardScale = nextBoardScale;
+
+        leftPanel.setScale(uiScale);
+        rightPanel.setScale(uiScale);
+        gamePanel.setUiScale(uiScale);
+        gamePanel.setBoardScale(boardScale);
+
+        int boardSize = BOARD_BASE_PX * boardScale;
+        gamePanel.setPreferredSize(new Dimension(boardSize, boardSize));
+
+        centerWrapper.revalidate();
         revalidate();
+        repaint();
+    }
+
+    private void applyFixedPanelWidth(JPanel panel, int width) {
+        panel.setPreferredSize(new Dimension(width, 1));
+        panel.setMinimumSize(new Dimension(width, 0));
+        panel.setMaximumSize(new Dimension(width, Integer.MAX_VALUE));
+    }
+
+    private int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private void setupKeyBindings() {
@@ -221,7 +267,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     }
 
     public int getScale() {
-        return scale;
+        return uiScale;
     }
 
     public static void main(String[] args) {

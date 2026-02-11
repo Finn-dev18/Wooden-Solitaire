@@ -20,7 +20,8 @@ public class GamePanel extends JPanel {
     private final AssetManager assets;
     private final GameModel model;
     private final GameUIController controller;
-    private int scale = 2;
+    private int boardScale = 2;
+    private int uiScale = 2;
     private Rectangle[][] slotRects = new Rectangle[GameModel.BOARD_SIZE][GameModel.BOARD_SIZE];
     private Point hoverCell;
 
@@ -29,7 +30,7 @@ public class GamePanel extends JPanel {
         this.model = model;
         this.controller = controller;
         setBackground(COLOR_BG);
-        int size = BASE_BOARD_CANVAS_SIZE * scale;
+        int size = BASE_BOARD_CANVAS_SIZE * boardScale;
         setPreferredSize(new Dimension(size, size));
         addMouseListener(new MouseAdapter() {
             @Override
@@ -58,11 +59,16 @@ public class GamePanel extends JPanel {
         });
     }
 
-    public void setScale(int scale) {
-        this.scale = Math.max(1, scale);
-        int size = BASE_BOARD_CANVAS_SIZE * this.scale;
+    public void setBoardScale(int scale) {
+        this.boardScale = Math.max(1, scale);
+        int size = BASE_BOARD_CANVAS_SIZE * this.boardScale;
         setPreferredSize(new Dimension(size, size));
         revalidate();
+        repaint();
+    }
+
+    public void setUiScale(int scale) {
+        this.uiScale = Math.max(1, scale);
         repaint();
     }
 
@@ -121,7 +127,7 @@ public class GamePanel extends JPanel {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
 
-        int size = BASE_BOARD_CANVAS_SIZE * scale;
+        int size = BASE_BOARD_CANVAS_SIZE * boardScale;
         int canvasX = (getWidth() - size) / 2;
         int canvasY = (getHeight() - size) / 2;
 
@@ -132,7 +138,7 @@ public class GamePanel extends JPanel {
         BufferedImage boardImage = assets.getImage("board_octagon_768_sym.png");
         g2d.drawImage(boardImage, boardX, boardY, boardArtSize, boardArtSize, null);
 
-        int slotSize = BASE_SLOT * scale;
+        int slotSize = BASE_SLOT * boardScale;
         int gridSize = slotSize * GameModel.BOARD_SIZE;
         int inset = (boardArtSize - gridSize) / 2;
 
@@ -199,22 +205,22 @@ public class GamePanel extends JPanel {
 
     private void drawStatus(Graphics2D g2d) {
         g2d.setColor(new Color(12, 9, 48, 220));
-        g2d.fillRect(12, 12, getWidth() - 24, 24 * scale);
+        g2d.fillRect(12, 12, getWidth() - 24, 24 * uiScale);
         g2d.setColor(new Color(224, 230, 255));
-        g2d.setFont(getFont().deriveFont((float) (11f * scale / 2f)));
-        g2d.drawString(model.getStatusMessage(), 20, 12 + 14 * scale / 2);
+        g2d.setFont(getFont().deriveFont((float) (11f * uiScale / 2f)));
+        g2d.drawString(model.getStatusMessage(), 20, 12 + 14 * uiScale / 2);
     }
 
     private void drawToast(Graphics2D g2d) {
         if (!model.hasToast()) return;
         int width = getWidth() - 80;
-        int height = 30 * scale;
+        int height = 30 * uiScale;
         int x = 40;
         int y = getHeight() - height - 20;
         g2d.setColor(new Color(252, 16, 87, 220));
         g2d.fillRect(x, y, width, height);
         g2d.setColor(Color.WHITE);
-        g2d.setFont(getFont().deriveFont((float) (12f * scale / 2f)));
+        g2d.setFont(getFont().deriveFont((float) (12f * uiScale / 2f)));
         g2d.drawString(model.getToastMessage(), x + 12, y + height / 2 + 4);
     }
 }

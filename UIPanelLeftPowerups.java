@@ -1,6 +1,5 @@
 import javax.swing.JPanel;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -79,10 +78,6 @@ public class UIPanelLeftPowerups extends JPanel {
 
     public void setScale(int scale) {
         this.scale = Math.max(1, scale);
-        int padding = (int) Math.round(BASE_PADDING * this.scale);
-        int buttonWidth = (int) Math.round(BASE_BUTTON_WIDTH * this.scale);
-        int preferredWidth = buttonWidth + (padding * 2);
-        setPreferredSize(new Dimension(preferredWidth, 1));
         revalidate();
         repaint();
     }
