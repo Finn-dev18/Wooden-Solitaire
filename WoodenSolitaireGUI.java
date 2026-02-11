@@ -132,14 +132,18 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         }
 
         int nextUiScale = clamp(frameHeight / 360, MIN_UI_SCALE, MAX_UI_SCALE);
+        while (nextUiScale > MIN_UI_SCALE && !canFitBoardAtMinimumScale(frameWidth, nextUiScale)) {
+            nextUiScale--;
+        }
+
         int leftWidth = BASE_LEFT_WIDTH * nextUiScale;
         int rightWidth = BASE_RIGHT_WIDTH * nextUiScale;
 
         applyFixedPanelWidth(leftPanel, leftWidth);
         applyFixedPanelWidth(rightPanel, rightWidth);
 
-        int availableW = Math.max(boardBasePx, frameWidth - leftWidth - rightWidth - (BOARD_MARGIN * 2));
-        int availableH = Math.max(boardBasePx, frameHeight - TOP_BAR_HEIGHT - (BOARD_MARGIN * 2));
+        int availableW = Math.max(1, frameWidth - leftWidth - rightWidth - (BOARD_MARGIN * 2));
+        int availableH = Math.max(1, frameHeight - TOP_BAR_HEIGHT - (BOARD_MARGIN * 2));
         int nextBoardScale = Math.min(availableW / boardBasePx, availableH / boardBasePx);
         nextBoardScale = clamp(nextBoardScale, MIN_BOARD_SCALE, MAX_BOARD_SCALE);
 
@@ -176,11 +180,14 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
             gamePanel.revalidate();
             centerWrapper.revalidate();
         }
+    }
 
-        System.out.println("Center available: " + availableW + "x" + availableH
-                + ", boardScale=" + boardScale
-                + ", gamePanel preferred=" + gamePanel.getPreferredSize().width + "x"
-                + gamePanel.getPreferredSize().height);
+    private boolean canFitBoardAtMinimumScale(int frameWidth, int candidateUiScale) {
+        int leftWidth = BASE_LEFT_WIDTH * candidateUiScale;
+        int rightWidth = BASE_RIGHT_WIDTH * candidateUiScale;
+        int minimumBoardWidth = boardBasePx * MIN_BOARD_SCALE;
+        int requiredWidth = leftWidth + rightWidth + minimumBoardWidth + (BOARD_MARGIN * 2);
+        return requiredWidth <= frameWidth;
     }
 
     private void applyFixedPanelWidth(JPanel panel, int width) {
