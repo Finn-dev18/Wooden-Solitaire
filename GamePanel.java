@@ -13,21 +13,21 @@ import java.awt.event.MouseEvent;
 
 public class GamePanel extends JPanel {
     private static final Color COLOR_BG = new Color(39, 30, 112);
-    private static final int BASE_BOARD_CANVAS_SIZE = 768;
+    private static final int BOARD_BASE_PX = 768;
     private static final int BASE_CELL_SIZE = 32;
     private static final int BASE_SLOT_SIZE = 32;
     private static final int BASE_PEG_SIZE = 32;
-    private static final int BASE_GRID_OFFSET_X = (BASE_BOARD_CANVAS_SIZE - (GameModel.BOARD_SIZE * BASE_CELL_SIZE)) / 2;
-    private static final int BASE_GRID_OFFSET_Y = (BASE_BOARD_CANVAS_SIZE - (GameModel.BOARD_SIZE * BASE_CELL_SIZE)) / 2;
-    private static final int DEFAULT_TOP_UI_MARGIN = 64;
+    private static final int BASE_GRID_OFFSET_X = (BOARD_BASE_PX - (GameModel.BOARD_SIZE * BASE_CELL_SIZE)) / 2;
+    private static final int BASE_GRID_OFFSET_Y = (BOARD_BASE_PX - (GameModel.BOARD_SIZE * BASE_CELL_SIZE)) / 2;
+    private static final int DEFAULT_TOP_UI_MARGIN = 96;
     private static final int DEFAULT_CENTER_MARGIN = 24;
 
     private final AssetManager assets;
     private final GameModel model;
     private final GameUIController controller;
     private final int boardBasePx;
-    private int boardScale = 2;
-    private int uiScale = 2;
+    private int boardScale = 1;
+    private int uiScale = 1;
     private int topUiMargin = DEFAULT_TOP_UI_MARGIN;
     private int centerMargin = DEFAULT_CENTER_MARGIN;
     private Rectangle[][] slotRects = new Rectangle[GameModel.BOARD_SIZE][GameModel.BOARD_SIZE];
@@ -37,7 +37,7 @@ public class GamePanel extends JPanel {
         this.assets = assets;
         this.model = model;
         this.controller = controller;
-        this.boardBasePx = resolveBoardBasePx();
+        this.boardBasePx = BOARD_BASE_PX;
         setBackground(COLOR_BG);
         updatePreferredSize();
         addMouseListener(new MouseAdapter() {
@@ -259,17 +259,9 @@ public class GamePanel extends JPanel {
         return new BoardMetrics(boardX, boardY, boardPx, cellPx, gridOffsetX, gridOffsetY);
     }
 
-    private int resolveBoardBasePx() {
-        try {
-            return Math.max(1, assets.getImage("board_octagon_768_sym.png").getWidth());
-        } catch (RuntimeException ex) {
-            return BASE_BOARD_CANVAS_SIZE;
-        }
-    }
-
     private void updatePreferredSize() {
         int width = boardBasePx * boardScale;
-        int height = topUiMargin + (boardBasePx * boardScale) + centerMargin;
+        int height = topUiMargin + (boardBasePx * boardScale) + (centerMargin * 2);
         Dimension boardDimension = new Dimension(width, height);
         setPreferredSize(boardDimension);
         setMinimumSize(boardDimension);
