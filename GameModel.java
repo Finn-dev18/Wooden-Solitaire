@@ -287,7 +287,7 @@ public class GameModel {
             }
             selectionRow = r;
             selectionCol = c;
-            statusMessage = "BRIDGE: Ziel wählen (Distanz 4).";
+            statusMessage = "BRIDGE: Ziel wählen (Distanz 3).";
             return;
         }
 
@@ -298,10 +298,10 @@ public class GameModel {
             return;
         }
 
-        boolean horizontal = fr == r && Math.abs(fc - c) == 4;
-        boolean vertical = fc == c && Math.abs(fr - r) == 4;
+        boolean horizontal = fr == r && Math.abs(fc - c) == 3;
+        boolean vertical = fc == c && Math.abs(fr - r) == 3;
         if (!horizontal && !vertical) {
-            statusMessage = "BRIDGE: Nur gerade Linie mit Distanz 4.";
+            statusMessage = "BRIDGE: Nur gerade Linie mit Distanz 3.";
             return;
         }
 
