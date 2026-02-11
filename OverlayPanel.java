@@ -26,8 +26,6 @@ public class OverlayPanel extends JPanel {
     private static final int BUTTON_HEIGHT_PX = 72;
     private static final int BUTTON_GAP_PX = 24;
     private static final int INPUT_TO_BUTTON_GAP_PX = 24;
-    private static final int INPUT_TEXT_TOP_INSET_PX = 18;
-    private static final int INPUT_TEXT_BOTTOM_INSET_PX = 12;
 
     private final AssetManager assets;
     private final GameModel model;
@@ -423,32 +421,24 @@ public class OverlayPanel extends JPanel {
         g2d.setFont(UIFonts.h2(controller.getScale()));
         g2d.setColor(COLOR_TEXT_INPUT);
         java.awt.FontMetrics fm = g2d.getFontMetrics();
-        int textX = inputX + (int) Math.round(24 * controller.getScale());
-        int topInset = (int) Math.round(INPUT_TEXT_TOP_INSET_PX * controller.getScale());
-        int bottomInset = (int) Math.round(INPUT_TEXT_BOTTOM_INSET_PX * controller.getScale());
-        int innerY = inputY + topInset;
-        int innerH = inputHeight - topInset - bottomInset;
+        int scale = controller.getScale();
+        int textX = inputX + (int) Math.round(24 * scale);
+        int padY = (int) Math.round(16 * scale);
+        int innerY = inputY + padY;
+        int innerH = inputHeight - padY * 2;
         int baselineY = innerY + (innerH - fm.getHeight()) / 2 + fm.getAscent();
+        baselineY += (int) Math.round(6 * scale);
         g2d.drawString(text, textX, baselineY);
 
-        g2d.setFont(UIFonts.small(controller.getScale()));
+        Rectangle tabRect = new Rectangle(
+                inputX + (int) Math.round(18 * scale),
+                inputY + (int) Math.round(6 * scale),
+                (int) Math.round(104 * scale),
+                (int) Math.round(30 * scale));
+
+        g2d.setFont(UIFonts.small(scale));
         g2d.setColor(COLOR_TEXT_DARK);
-        int tabX = inputX + (int) Math.round(20 * controller.getScale());
-        int tabY = inputY + (int) Math.round(20 * controller.getScale());
-        g2d.drawString("NAME", tabX, tabY);
-
-        g2d.setFont(UIFonts.h2(controller.getScale()));
-        g2d.setColor(COLOR_TEXT_INPUT);
-        fm = g2d.getFontMetrics();
-
-        if (nameInputFocused && cursorOn) {
-            int textWidth = fm.stringWidth(text);
-            int cursorX = textX + textWidth + (int) Math.round(4 * controller.getScale());
-            int cursorTop = baselineY - fm.getAscent();
-            int cursorBottom = baselineY + fm.getDescent();
-            int cursorHeight = cursorBottom - cursorTop;
-            g2d.fillRect(cursorX, cursorTop, (int) Math.round(2 * controller.getScale()), cursorHeight);
-        }
+        drawCenteredText(g2d, "NAME", tabRect);
     }
 
     private void drawButtonRow(Graphics2D g2d, Rectangle panelRect, int y, OverlayButton... buttons) {
