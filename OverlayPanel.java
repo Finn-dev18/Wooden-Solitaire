@@ -465,23 +465,14 @@ public class OverlayPanel extends JPanel {
     }
 
     private String getNormalAsset(OverlayButton button) {
-        if (button == OverlayButton.MENU || button == OverlayButton.RESTART) {
-            return "menu_button_normal_240x64.png";
-        }
         return "ui_button_normal_260x72.png";
     }
 
     private String getHoverAsset(OverlayButton button) {
-        if (button == OverlayButton.MENU || button == OverlayButton.RESTART) {
-            return "menu_button_hover_240x64.png";
-        }
         return "ui_button_hover_260x72.png";
     }
 
     private String getPressedAsset(OverlayButton button) {
-        if (button == OverlayButton.MENU || button == OverlayButton.RESTART) {
-            return "menu_button_pressed_240x64.png";
-        }
         return "ui_button_pressed_260x72.png";
     }
 

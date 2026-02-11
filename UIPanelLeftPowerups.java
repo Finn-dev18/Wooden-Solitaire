@@ -15,7 +15,6 @@ import java.util.Map;
 public class UIPanelLeftPowerups extends JPanel {
     private static final Color COLOR_TEXT = new Color(43, 253, 223);
     private static final Color COLOR_TEXT_MUTED = new Color(224, 230, 255);
-    private static final int BASE_WIDTH = 220;
     private static final int BASE_PADDING = 16;
     private static final int BASE_BUTTON_WIDTH = 260;
     private static final int BASE_BUTTON_HEIGHT = 72;
@@ -79,8 +78,11 @@ public class UIPanelLeftPowerups extends JPanel {
     }
 
     public void setScale(int scale) {
-        this.scale = Math.max(2, scale);
-        setPreferredSize(new Dimension((int) Math.round(BASE_WIDTH * this.scale), 1));
+        this.scale = Math.max(1, scale);
+        int padding = (int) Math.round(BASE_PADDING * this.scale);
+        int buttonWidth = (int) Math.round(BASE_BUTTON_WIDTH * this.scale);
+        int preferredWidth = buttonWidth + (padding * 2);
+        setPreferredSize(new Dimension(preferredWidth, 1));
         revalidate();
         repaint();
     }
@@ -165,15 +167,15 @@ public class UIPanelLeftPowerups extends JPanel {
     private String getIconName(PowerupType type) {
         switch (type) {
             case UNDO:
-                return "icon_undo_16.png";
+                return "icon_hint_16.png";
             case BOMB:
                 return "icon_bomb_16.png";
             case SWAP:
                 return "icon_swap_16.png";
             case BRIDGEJUMP:
-                return "icon_bridge_16.png";
+                return "icon_laser_16.png";
             case RANDSTURM:
-                return "icon_randsturm_16.png";
+                return "icon_freeze_16.png";
             default:
                 return "icon_swap_16.png";
         }

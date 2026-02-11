@@ -59,7 +59,7 @@ public class GamePanel extends JPanel {
     }
 
     public void setScale(int scale) {
-        this.scale = Math.max(2, scale);
+        this.scale = Math.max(1, scale);
         int size = BASE_BOARD_CANVAS_SIZE * this.scale;
         setPreferredSize(new Dimension(size, size));
         revalidate();
@@ -129,7 +129,7 @@ public class GamePanel extends JPanel {
         int boardX = canvasX + (size - boardArtSize) / 2;
         int boardY = canvasY + (size - boardArtSize) / 2;
 
-        BufferedImage boardImage = assets.getImage("board_octagon_768.png");
+        BufferedImage boardImage = assets.getImage("board_octagon_768_sym.png");
         g2d.drawImage(boardImage, boardX, boardY, boardArtSize, boardArtSize, null);
 
         int slotSize = BASE_SLOT * scale;
