@@ -19,6 +19,13 @@ public class OverlayPanel extends JPanel {
     private static final Color COLOR_TEXT_DARK = new Color(245, 241, 235);
     private static final Color COLOR_TEXT_INPUT = new Color(245, 241, 235);
     private static final int MAX_NAME_LENGTH = 12;
+    private static final int PANEL_PADDING_PX = 48;
+    private static final int HEADER_HEIGHT_PX = 96;
+    private static final int MENU_BUTTON_WIDTH_PX = 360;
+    private static final int ROW_BUTTON_WIDTH_PX = 260;
+    private static final int BUTTON_HEIGHT_PX = 72;
+    private static final int BUTTON_GAP_PX = 24;
+    private static final int INPUT_TO_BUTTON_GAP_PX = 24;
 
     private final AssetManager assets;
     private final GameModel model;
@@ -296,79 +303,110 @@ public class OverlayPanel extends JPanel {
         Rectangle panelRect = new Rectangle(panelX, panelY, panelWidth, panelHeight);
         g2d.drawImage(panelImage, panelRect.x, panelRect.y, panelRect.width, panelRect.height, null);
 
-        drawBanner(g2d, panelRect);
-        drawOverlayContent(g2d, panelRect);
+        Layout layout = buildLayout(panelRect);
+        drawHeader(g2d, layout);
+        drawOverlayContent(g2d, layout);
     }
 
     private String getPanelAsset() {
         return state == OverlayState.GAME_OVER ? "ui_gameover_panel_640x420.png" : "ui_menu_panel_640x420.png";
     }
 
-    private void drawBanner(Graphics2D g2d, Rectangle panelRect) {
-        BufferedImage banner = assets.getImage("ui_banner_520x120.png");
-        int bannerWidth = (int) Math.round(banner.getWidth() * controller.getScale());
-        int bannerHeight = (int) Math.round(banner.getHeight() * controller.getScale());
-        int bannerX = panelRect.x + (panelRect.width - bannerWidth) / 2;
-        int bannerY = panelRect.y + (int) Math.round(12 * controller.getScale());
-        g2d.drawImage(banner, bannerX, bannerY, bannerWidth, bannerHeight, null);
+    private Layout buildLayout(Rectangle panelRect) {
+        int scale = controller.getScale();
+        int panelPadding = (int) Math.round(PANEL_PADDING_PX * scale);
+        int headerHeight = (int) Math.round(HEADER_HEIGHT_PX * scale);
+
+        int contentX = panelRect.x + panelPadding;
+        int contentWidth = panelRect.width - panelPadding * 2;
+        int contentTop = panelRect.y + panelPadding + headerHeight;
+        int contentBottom = panelRect.y + panelRect.height - panelPadding;
+        int contentHeight = Math.max(0, contentBottom - contentTop);
+        Rectangle contentRect = new Rectangle(contentX, contentTop, contentWidth, contentHeight);
+
+        Rectangle headerRect = new Rectangle(contentX, panelRect.y + panelPadding, contentWidth, headerHeight);
+        return new Layout(panelRect, headerRect, contentRect);
     }
 
-    private void drawOverlayContent(Graphics2D g2d, Rectangle panelRect) {
-        int contentX = panelRect.x + (int) Math.round(40 * controller.getScale());
-        int contentY = panelRect.y + (int) Math.round(150 * controller.getScale());
+    private void drawHeader(Graphics2D g2d, Layout layout) {
+        BufferedImage banner = assets.getImage("ui_banner_520x120.png");
+        g2d.drawImage(
+                banner,
+                layout.headerRect.x,
+                layout.headerRect.y,
+                layout.headerRect.width,
+                layout.headerRect.height,
+                null);
 
+        g2d.setColor(COLOR_TEXT);
+        g2d.setFont(UIFonts.h1(controller.getScale()));
+        drawCenteredText(g2d, getOverlayTitle(), layout.headerRect);
+    }
+
+    private void drawOverlayContent(Graphics2D g2d, Layout layout) {
         if (state == OverlayState.PRE_GAME_NAME) {
-            drawPreGame(g2d, panelRect, contentX, contentY);
+            drawPreGame(g2d, layout);
         } else if (state == OverlayState.MENU) {
-            drawMenu(g2d, panelRect, contentX, contentY);
+            drawMenu(g2d, layout);
         } else if (state == OverlayState.GAME_OVER) {
-            drawGameOver(g2d, panelRect, contentX, contentY);
+            drawGameOver(g2d, layout);
         }
     }
 
-    private void drawPreGame(Graphics2D g2d, Rectangle panelRect, int contentX, int contentY) {
-        g2d.setColor(COLOR_TEXT);
-        g2d.setFont(UIFonts.h1(controller.getScale()));
-        g2d.drawString("PLAYER NAME", contentX, contentY);
-
-        int inputY = contentY + (int) Math.round(24 * controller.getScale());
-        drawNameInput(g2d, panelRect, inputY);
-
-        int buttonY = panelRect.y + panelRect.height - (int) Math.round(120 * controller.getScale());
-        drawButtonRow(g2d, panelRect, buttonY, OverlayButton.START, OverlayButton.QUIT);
+    private String getOverlayTitle() {
+        if (state == OverlayState.MENU) {
+            return "MENU";
+        }
+        if (state == OverlayState.PRE_GAME_NAME) {
+            return "PLAYER NAME";
+        }
+        if (state == OverlayState.GAME_OVER) {
+            return "GAME OVER";
+        }
+        return "";
     }
 
-    private void drawMenu(Graphics2D g2d, Rectangle panelRect, int contentX, int contentY) {
-        g2d.setColor(COLOR_TEXT);
-        g2d.setFont(UIFonts.h1(controller.getScale()));
-        g2d.drawString("MENU", contentX, contentY);
+    private void drawPreGame(Graphics2D g2d, Layout layout) {
+        int buttonY = layout.contentRect.y + layout.contentRect.height - (int) Math.round(BUTTON_HEIGHT_PX * controller.getScale());
+        int inputImageHeight = (int) Math.round(104 * controller.getScale());
+        int gap = (int) Math.round(INPUT_TO_BUTTON_GAP_PX * controller.getScale());
+        int inputY = layout.contentRect.y + Math.max(0, (buttonY - gap - inputImageHeight - layout.contentRect.y) / 2);
 
-        int buttonY = contentY + (int) Math.round(40 * controller.getScale());
-        drawButtonColumn(g2d, panelRect, buttonY, new OverlayButton[]{
+        drawNameInput(g2d, layout.panelRect, inputY);
+        drawButtonRow(g2d, layout.panelRect, buttonY, OverlayButton.START, OverlayButton.QUIT);
+    }
+
+    private void drawMenu(Graphics2D g2d, Layout layout) {
+        drawCenteredButtonColumn(g2d, layout.contentRect, new OverlayButton[]{
                 OverlayButton.RESUME,
                 OverlayButton.NEW_GAME,
                 OverlayButton.QUIT
         });
     }
 
-    private void drawGameOver(Graphics2D g2d, Rectangle panelRect, int contentX, int contentY) {
-        g2d.setColor(COLOR_TEXT);
-        g2d.setFont(UIFonts.h1(controller.getScale()));
-        g2d.drawString("GAME OVER", contentX, contentY);
+    private void drawGameOver(Graphics2D g2d, Layout layout) {
+        int buttonY = layout.contentRect.y + layout.contentRect.height - (int) Math.round(BUTTON_HEIGHT_PX * controller.getScale());
 
-        int statY = contentY + (int) Math.round(26 * controller.getScale());
         g2d.setFont(UIFonts.body(controller.getScale()));
         g2d.setColor(COLOR_TEXT_MUTED);
-        g2d.drawString("Moves: " + model.getMovesCount(), contentX, statY);
-        int lineHeight = g2d.getFontMetrics().getHeight() + 2;
-        statY += lineHeight;
-        g2d.drawString("Pegs: " + model.getPegsLeft(), contentX, statY);
-        statY += lineHeight;
         int score = ScoreCalculator.calculate(model.getElapsedDuration(), model.getPegsLeft(), model.getMovesCount());
-        g2d.drawString("Score: " + score, contentX, statY);
+        String[] lines = new String[]{
+                "Moves: " + model.getMovesCount(),
+                "Pegs: " + model.getPegsLeft(),
+                "Score: " + score
+        };
+        int lineSpacing = g2d.getFontMetrics().getHeight() + (int) Math.round(8 * controller.getScale());
+        int statsHeight = lineSpacing * (lines.length - 1) + g2d.getFontMetrics().getAscent();
+        int availableTop = layout.contentRect.y;
+        int availableBottom = buttonY - (int) Math.round(28 * controller.getScale());
+        int blockCenterY = availableTop + Math.max(0, (availableBottom - availableTop) / 2);
+        int firstBaselineY = blockCenterY - statsHeight / 2 + g2d.getFontMetrics().getAscent();
+        for (int i = 0; i < lines.length; i++) {
+            int baselineY = firstBaselineY + i * lineSpacing;
+            drawCenteredTextAtBaseline(g2d, lines[i], layout.contentRect.x + layout.contentRect.width / 2, baselineY);
+        }
 
-        int buttonY = panelRect.y + panelRect.height - (int) Math.round(120 * controller.getScale());
-        drawButtonRow(g2d, panelRect, buttonY, OverlayButton.RESTART, OverlayButton.MENU);
+        drawButtonRow(g2d, layout.panelRect, buttonY, OverlayButton.RESTART, OverlayButton.MENU);
     }
 
     private void drawNameInput(Graphics2D g2d, Rectangle panelRect, int inputY) {
@@ -383,21 +421,32 @@ public class OverlayPanel extends JPanel {
         g2d.setFont(UIFonts.h2(controller.getScale()));
         g2d.setColor(COLOR_TEXT_INPUT);
         int textX = inputX + (int) Math.round(24 * controller.getScale());
-        int textY = inputY + (int) Math.round(61 * controller.getScale());
-        g2d.drawString(text, textX, textY);
+        int baselineY = centeredTextBaseline(g2d, inputY, inputHeight);
+        g2d.drawString(text, textX, baselineY);
+
+        g2d.setFont(UIFonts.small(controller.getScale()));
+        g2d.setColor(COLOR_TEXT_DARK);
+        int tabX = inputX + (int) Math.round(20 * controller.getScale());
+        int tabY = inputY + (int) Math.round(20 * controller.getScale());
+        g2d.drawString("NAME", tabX, tabY);
+
+        g2d.setFont(UIFonts.h2(controller.getScale()));
+        g2d.setColor(COLOR_TEXT_INPUT);
 
         if (nameInputFocused && cursorOn) {
             int textWidth = g2d.getFontMetrics().stringWidth(text);
             int cursorX = textX + textWidth + (int) Math.round(4 * controller.getScale());
-            int cursorY = textY - (int) Math.round(11 * controller.getScale());
-            g2d.fillRect(cursorX, cursorY, (int) Math.round(2 * controller.getScale()), (int) Math.round(14 * controller.getScale()));
+            java.awt.FontMetrics metrics = g2d.getFontMetrics();
+            int cursorTop = baselineY - metrics.getAscent();
+            int cursorHeight = metrics.getAscent() + metrics.getDescent();
+            g2d.fillRect(cursorX, cursorTop, (int) Math.round(2 * controller.getScale()), cursorHeight);
         }
     }
 
     private void drawButtonRow(Graphics2D g2d, Rectangle panelRect, int y, OverlayButton... buttons) {
-        int buttonWidth = (int) Math.round(260 * controller.getScale());
-        int buttonHeight = (int) Math.round(72 * controller.getScale());
-        int gap = (int) Math.round(20 * controller.getScale());
+        int buttonWidth = (int) Math.round(ROW_BUTTON_WIDTH_PX * controller.getScale());
+        int buttonHeight = (int) Math.round(BUTTON_HEIGHT_PX * controller.getScale());
+        int gap = (int) Math.round(BUTTON_GAP_PX * controller.getScale());
         int totalWidth = buttonWidth * buttons.length + gap * (buttons.length - 1);
         int startX = panelRect.x + (panelRect.width - totalWidth) / 2;
         for (int i = 0; i < buttons.length; i++) {
@@ -408,11 +457,13 @@ public class OverlayPanel extends JPanel {
         }
     }
 
-    private void drawButtonColumn(Graphics2D g2d, Rectangle panelRect, int startY, OverlayButton[] buttons) {
-        int buttonWidth = (int) Math.round(260 * controller.getScale());
-        int buttonHeight = (int) Math.round(72 * controller.getScale());
-        int gap = (int) Math.round(16 * controller.getScale());
-        int x = panelRect.x + (panelRect.width - buttonWidth) / 2;
+    private void drawCenteredButtonColumn(Graphics2D g2d, Rectangle contentRect, OverlayButton[] buttons) {
+        int buttonWidth = (int) Math.round(MENU_BUTTON_WIDTH_PX * controller.getScale());
+        int buttonHeight = (int) Math.round(BUTTON_HEIGHT_PX * controller.getScale());
+        int gap = (int) Math.round(BUTTON_GAP_PX * controller.getScale());
+        int totalHeight = buttonHeight * buttons.length + gap * (buttons.length - 1);
+        int startY = contentRect.y + (contentRect.height - totalHeight) / 2;
+        int x = contentRect.x + (contentRect.width - buttonWidth) / 2;
         for (int i = 0; i < buttons.length; i++) {
             int y = startY + i * (buttonHeight + gap);
             Rectangle rect = new Rectangle(x, y, buttonWidth, buttonHeight);
@@ -440,8 +491,26 @@ public class OverlayPanel extends JPanel {
         String label = button.getLabel();
         int textWidth = g2d.getFontMetrics().stringWidth(label);
         int textX = rect.x + (rect.width - textWidth) / 2;
-        int textY = rect.y + rect.height / 2 + (int) Math.round(6 * controller.getScale());
+        int textY = centeredTextBaseline(g2d, rect.y, rect.height);
         g2d.drawString(label, textX, textY);
+    }
+
+    private int centeredTextBaseline(Graphics2D g2d, int rectY, int rectHeight) {
+        java.awt.FontMetrics metrics = g2d.getFontMetrics();
+        return rectY + (rectHeight - metrics.getHeight()) / 2 + metrics.getAscent();
+    }
+
+    private void drawCenteredText(Graphics2D g2d, String text, Rectangle rect) {
+        int textWidth = g2d.getFontMetrics().stringWidth(text);
+        int textX = rect.x + (rect.width - textWidth) / 2;
+        int textY = centeredTextBaseline(g2d, rect.y, rect.height);
+        g2d.drawString(text, textX, textY);
+    }
+
+    private void drawCenteredTextAtBaseline(Graphics2D g2d, String text, int centerX, int baselineY) {
+        int textWidth = g2d.getFontMetrics().stringWidth(text);
+        int textX = centerX - textWidth / 2;
+        g2d.drawString(text, textX, baselineY);
     }
 
     private String getNormalAsset(OverlayButton button) {
@@ -474,5 +543,16 @@ public class OverlayPanel extends JPanel {
             return label;
         }
     }
-}
 
+    private static class Layout {
+        private final Rectangle panelRect;
+        private final Rectangle headerRect;
+        private final Rectangle contentRect;
+
+        private Layout(Rectangle panelRect, Rectangle headerRect, Rectangle contentRect) {
+            this.panelRect = panelRect;
+            this.headerRect = headerRect;
+            this.contentRect = contentRect;
+        }
+    }
+}
