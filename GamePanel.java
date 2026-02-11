@@ -13,7 +13,7 @@ import java.awt.event.MouseEvent;
 
 public class GamePanel extends JPanel {
     private static final Color COLOR_BG = new Color(39, 30, 112);
-    private static final int BASE_BOARD_CANVAS_SIZE = 320;
+    private static final int BASE_BOARD_CANVAS_SIZE = 768;
     private static final int BASE_SLOT = 32;
     private static final double BOARD_ART_FILL = 0.94;
 
@@ -31,7 +31,10 @@ public class GamePanel extends JPanel {
         this.controller = controller;
         setBackground(COLOR_BG);
         int size = BASE_BOARD_CANVAS_SIZE * boardScale;
-        setPreferredSize(new Dimension(size, size));
+        Dimension boardDimension = new Dimension(size, size);
+        setPreferredSize(boardDimension);
+        setMinimumSize(boardDimension);
+        setMaximumSize(boardDimension);
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -62,7 +65,10 @@ public class GamePanel extends JPanel {
     public void setBoardScale(int scale) {
         this.boardScale = Math.max(1, scale);
         int size = BASE_BOARD_CANVAS_SIZE * this.boardScale;
-        setPreferredSize(new Dimension(size, size));
+        Dimension boardDimension = new Dimension(size, size);
+        setPreferredSize(boardDimension);
+        setMinimumSize(boardDimension);
+        setMaximumSize(boardDimension);
         revalidate();
         repaint();
     }
