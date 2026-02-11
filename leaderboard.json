@@ -1,5 +1,12 @@
 {
   "entries": [
-    {"name":"Finn","score":3942,"pegsLeft":8,"durationSeconds":69,"timestamp":1770141011059,"powerupsEnabled":true}
+    {"name":"Finn","score":4596,"pegsLeft":3,"durationSeconds":42,"timestamp":1770803054040,"powerupsEnabled":true},
+    {"name":"Test","score":4584,"pegsLeft":3,"durationSeconds":48,"timestamp":1770817253442,"powerupsEnabled":true},
+    {"name":"Siddi","score":4528,"pegsLeft":3,"durationSeconds":76,"timestamp":1770809474518,"powerupsEnabled":true},
+    {"name":"Balin","score":4274,"pegsLeft":5,"durationSeconds":83,"timestamp":1770809201601,"powerupsEnabled":true},
+    {"name":"Elias","score":4266,"pegsLeft":5,"durationSeconds":87,"timestamp":1770809371651,"powerupsEnabled":true},
+    {"name":"Benjamin","score":4134,"pegsLeft":7,"durationSeconds":33,"timestamp":1770802797187,"powerupsEnabled":true},
+    {"name":"Frederfick","score":3938,"pegsLeft":8,"durationSeconds":71,"timestamp":1770797996686,"powerupsEnabled":true},
+    {"name":"r","score":3666,"pegsLeft":11,"durationSeconds":27,"timestamp":1770817689245,"powerupsEnabled":true}
   ]
 }
