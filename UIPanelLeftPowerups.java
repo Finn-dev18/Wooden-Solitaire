@@ -165,15 +165,15 @@ public class UIPanelLeftPowerups extends JPanel {
     private String getIconName(PowerupType type) {
         switch (type) {
             case UNDO:
-                return "icon_hint_16.png";
+                return "icon_undo_16.png";
             case BOMB:
                 return "icon_bomb_16.png";
             case SWAP:
                 return "icon_swap_16.png";
             case BRIDGEJUMP:
-                return "icon_laser_16.png";
+                return "icon_bridge_16.png";
             case RANDSTURM:
-                return "icon_freeze_16.png";
+                return "icon_randsturm_16.png";
             default:
                 return "icon_swap_16.png";
         }
