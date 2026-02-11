@@ -26,7 +26,8 @@ public class OverlayPanel extends JPanel {
     private static final int BUTTON_HEIGHT_PX = 72;
     private static final int BUTTON_GAP_PX = 24;
     private static final int INPUT_TO_BUTTON_GAP_PX = 24;
-    private static final int INPUT_TEXT_PADDING_Y_PX = 24;
+    private static final int INPUT_TEXT_TOP_INSET_PX = 18;
+    private static final int INPUT_TEXT_BOTTOM_INSET_PX = 12;
 
     private final AssetManager assets;
     private final GameModel model;
@@ -423,9 +424,10 @@ public class OverlayPanel extends JPanel {
         g2d.setColor(COLOR_TEXT_INPUT);
         java.awt.FontMetrics fm = g2d.getFontMetrics();
         int textX = inputX + (int) Math.round(24 * controller.getScale());
-        int padY = (int) Math.round(INPUT_TEXT_PADDING_Y_PX * controller.getScale());
-        int innerY = inputY + padY;
-        int innerH = inputHeight - 2 * padY;
+        int topInset = (int) Math.round(INPUT_TEXT_TOP_INSET_PX * controller.getScale());
+        int bottomInset = (int) Math.round(INPUT_TEXT_BOTTOM_INSET_PX * controller.getScale());
+        int innerY = inputY + topInset;
+        int innerH = inputHeight - topInset - bottomInset;
         int baselineY = innerY + (innerH - fm.getHeight()) / 2 + fm.getAscent();
         g2d.drawString(text, textX, baselineY);
 
