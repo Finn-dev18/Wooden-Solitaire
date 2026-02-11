@@ -13,8 +13,9 @@ import java.awt.event.KeyEvent;
 
 public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final Color COLOR_BG = new Color(39, 30, 112);
-    private static final int BASE_LEFT_WIDTH = 220;
-    private static final int BASE_RIGHT_WIDTH = 240;
+    private static final int BASE_LEFT_BUTTON_WIDTH = 260;
+    private static final int BASE_RIGHT_BUTTON_WIDTH = 260;
+    private static final int BASE_SIDE_PADDING = 16;
     private static final int BASE_BOARD = 320;
     private static final int BASE_GAP = 28;
     private static final int BASE_HEIGHT = 512;
@@ -57,9 +58,9 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
                 "menu_button_pressed_240x64.png",
                 "icon_bomb_16.png",
                 "icon_swap_16.png",
-                "icon_undo_16.png",
-                "icon_bridge_16.png",
-                "icon_randsturm_16.png");
+                "icon_hint_16.png",
+                "icon_laser_16.png",
+                "icon_freeze_16.png");
 
         add(leftPanel, BorderLayout.WEST);
         add(gamePanel, BorderLayout.CENTER);
@@ -104,7 +105,9 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         if (width <= 0 || height <= 0) {
             return;
         }
-        int baseWidth = BASE_LEFT_WIDTH + BASE_BOARD + BASE_RIGHT_WIDTH + BASE_GAP;
+        int baseLeftWidth = BASE_LEFT_BUTTON_WIDTH + (BASE_SIDE_PADDING * 2);
+        int baseRightWidth = BASE_RIGHT_BUTTON_WIDTH + (BASE_SIDE_PADDING * 2);
+        int baseWidth = baseLeftWidth + BASE_BOARD + baseRightWidth + BASE_GAP;
         double scaleValue = Math.min(width / (double) baseWidth, height / (double) BASE_HEIGHT);
         int nextScale = (int) Math.floor(scaleValue);
         nextScale = Math.max(1, Math.min(6, nextScale));

@@ -14,7 +14,6 @@ import java.util.List;
 public class UIPanelRightLeaderboard extends JPanel {
     private static final Color COLOR_TEXT = new Color(43, 253, 223);
     private static final Color COLOR_TEXT_MUTED = new Color(224, 230, 255);
-    private static final int BASE_WIDTH = 240;
     private static final int BASE_PADDING = 16;
     private static final int BASE_BUTTON_WIDTH = 260;
     private static final int BASE_BUTTON_HEIGHT = 72;
@@ -96,8 +95,11 @@ public class UIPanelRightLeaderboard extends JPanel {
     }
 
     public void setScale(int scale) {
-        this.scale = Math.max(2, scale);
-        setPreferredSize(new Dimension((int) Math.round(BASE_WIDTH * this.scale), 1));
+        this.scale = Math.max(1, scale);
+        int padding = (int) Math.round(BASE_PADDING * this.scale);
+        int buttonWidth = (int) Math.round(BASE_BUTTON_WIDTH * this.scale);
+        int preferredWidth = buttonWidth + (padding * 2);
+        setPreferredSize(new Dimension(preferredWidth, 1));
         revalidate();
         repaint();
     }
