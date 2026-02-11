@@ -270,7 +270,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     public void requestRestart() {
         model.resetGame();
         gameOverHandled = false;
-        overlayPanel.setOverlayState(OverlayState.NONE);
+        overlayPanel.setOverlayState(OverlayState.PRE_GAME_NAME);
         onModelUpdated();
     }
 

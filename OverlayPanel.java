@@ -54,9 +54,9 @@ public class OverlayPanel extends JPanel {
             nameInputFocused = true;
         }
         if (state == OverlayState.GAME_OVER) {
-            nameInput = model.getPlayerName();
-            nameInputFocused = true;
+            nameInputFocused = false;
             top10Candidate = isTop10Candidate();
+            submitGameOverEntry();
         }
         setVisible(state != OverlayState.NONE);
         if (state != OverlayState.NONE) {
@@ -68,8 +68,6 @@ public class OverlayPanel extends JPanel {
     public void handleEnterKey() {
         if (state == OverlayState.PRE_GAME_NAME && canStart()) {
             submitNameAndStart();
-        } else if (state == OverlayState.GAME_OVER && top10Candidate) {
-            submitGameOverName();
         }
     }
 
@@ -181,7 +179,7 @@ public class OverlayPanel extends JPanel {
     }
 
     private boolean isNameEntryActive() {
-        return state == OverlayState.PRE_GAME_NAME || (state == OverlayState.GAME_OVER && top10Candidate);
+        return state == OverlayState.PRE_GAME_NAME;
     }
 
     private void handleButtonClick(OverlayButton button) {
@@ -199,17 +197,14 @@ public class OverlayPanel extends JPanel {
                 break;
             case NEW_GAME:
                 model.resetGame();
-                controller.setOverlayState(OverlayState.NONE);
+                controller.setOverlayState(OverlayState.PRE_GAME_NAME);
                 break;
             case MENU:
                 controller.setOverlayState(OverlayState.MENU);
                 break;
             case RESTART:
                 model.resetGame();
-                controller.setOverlayState(OverlayState.NONE);
-                break;
-            case SAVE:
-                submitGameOverName();
+                controller.setOverlayState(OverlayState.PRE_GAME_NAME);
                 break;
             default:
                 break;
@@ -224,25 +219,22 @@ public class OverlayPanel extends JPanel {
         }
         model.setPlayerName(trimmed);
         model.resetGame();
+        model.startTimerNow();
         controller.setOverlayState(OverlayState.NONE);
     }
 
-    private void submitGameOverName() {
+    private void submitGameOverEntry() {
         if (!top10Candidate) {
             return;
         }
-        String trimmed = nameInput == null ? "" : nameInput.trim();
-        if (trimmed.isEmpty()) {
-            trimmed = model.getPlayerName();
+        String playerName = model.getPlayerName();
+        if (playerName == null || playerName.trim().isEmpty()) {
+            playerName = "Player";
         }
-        if (trimmed.isEmpty()) {
-            trimmed = "Player";
-        }
-        model.setPlayerName(trimmed);
         int score = ScoreCalculator.calculate(model.getElapsedDuration(), model.getPegsLeft(), model.getMovesCount());
         long durationSeconds = model.getElapsedDuration().getSeconds();
         LeaderboardManager.Entry entry = new LeaderboardManager.Entry(
-                trimmed,
+                playerName,
                 score,
                 model.getPegsLeft(),
                 durationSeconds,
@@ -375,19 +367,8 @@ public class OverlayPanel extends JPanel {
         int score = ScoreCalculator.calculate(model.getElapsedDuration(), model.getPegsLeft(), model.getMovesCount());
         g2d.drawString("Score: " + score, contentX, statY);
 
-        int inputY = statY + (int) Math.round(20 * controller.getScale());
-        if (top10Candidate) {
-            drawNameInput(g2d, panelRect, inputY);
-        }
-
         int buttonY = panelRect.y + panelRect.height - (int) Math.round(120 * controller.getScale());
-        if (top10Candidate) {
-            drawButtonRow(g2d, panelRect, buttonY, OverlayButton.SAVE, OverlayButton.RESTART);
-            int secondaryY = buttonY + (int) Math.round(80 * controller.getScale());
-            drawButtonRow(g2d, panelRect, secondaryY, OverlayButton.MENU);
-        } else {
-            drawButtonRow(g2d, panelRect, buttonY, OverlayButton.RESTART, OverlayButton.MENU);
-        }
+        drawButtonRow(g2d, panelRect, buttonY, OverlayButton.RESTART, OverlayButton.MENU);
     }
 
     private void drawNameInput(Graphics2D g2d, Rectangle panelRect, int inputY) {
@@ -481,8 +462,7 @@ public class OverlayPanel extends JPanel {
         RESUME("RESUME"),
         NEW_GAME("NEW GAME"),
         MENU("MENU"),
-        RESTART("RESTART"),
-        SAVE("SAVE");
+        RESTART("RESTART");
 
         private final String label;
 
