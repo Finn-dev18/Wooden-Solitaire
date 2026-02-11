@@ -57,9 +57,9 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
                 "menu_button_pressed_240x64.png",
                 "icon_bomb_16.png",
                 "icon_swap_16.png",
-                "icon_hint_16.png",
-                "icon_laser_16.png",
-                "icon_freeze_16.png");
+                "icon_undo_16.png",
+                "icon_bridge_16.png",
+                "icon_randsturm_16.png");
 
         add(leftPanel, BorderLayout.WEST);
         add(gamePanel, BorderLayout.CENTER);
