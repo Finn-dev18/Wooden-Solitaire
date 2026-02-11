@@ -18,14 +18,15 @@ import java.awt.event.KeyEvent;
 public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final Color COLOR_BG = new Color(39, 30, 112);
 
-    private static final int BASE_LEFT_WIDTH = 360;
-    private static final int BASE_RIGHT_WIDTH = 320;
-    private static final int BOARD_BASE_PX = 320;
+    private static final int BASE_LEFT_WIDTH = 340;
+    private static final int BASE_RIGHT_WIDTH = 340;
+    private static final int DEFAULT_BOARD_BASE_PX = 768;
     private static final int MIN_UI_SCALE = 1;
-    private static final int MAX_UI_SCALE = 3;
+    private static final int MAX_UI_SCALE = 2;
     private static final int MIN_BOARD_SCALE = 1;
     private static final int MAX_BOARD_SCALE = 6;
     private static final int BOARD_MARGIN = 24;
+    private static final int TOP_BAR_HEIGHT = 0;
 
     private final AssetManager assets = new AssetManager();
     private final GameModel model = new GameModel();
@@ -38,6 +39,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
 
     private int uiScale = 2;
     private int boardScale = 2;
+    private int boardBasePx = DEFAULT_BOARD_BASE_PX;
     private boolean gameOverHandled;
 
     public WoodenSolitaireGUI() {
@@ -99,6 +101,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         });
 
         setupKeyBindings();
+        boardBasePx = resolveBoardBasePx();
         updateScale();
         pack();
         setLocationRelativeTo(null);
@@ -135,9 +138,9 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         applyFixedPanelWidth(leftPanel, leftWidth);
         applyFixedPanelWidth(rightPanel, rightWidth);
 
-        int availableW = Math.max(BOARD_BASE_PX, frameWidth - leftWidth - rightWidth - (BOARD_MARGIN * 2));
-        int availableH = Math.max(BOARD_BASE_PX, frameHeight - (BOARD_MARGIN * 2));
-        int nextBoardScale = Math.min(availableW / BOARD_BASE_PX, availableH / BOARD_BASE_PX);
+        int availableW = Math.max(boardBasePx, frameWidth - leftWidth - rightWidth - (BOARD_MARGIN * 2));
+        int availableH = Math.max(boardBasePx, frameHeight - TOP_BAR_HEIGHT - (BOARD_MARGIN * 2));
+        int nextBoardScale = Math.min(availableW / boardBasePx, availableH / boardBasePx);
         nextBoardScale = clamp(nextBoardScale, MIN_BOARD_SCALE, MAX_BOARD_SCALE);
 
         uiScale = nextUiScale;
@@ -148,18 +151,50 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         gamePanel.setUiScale(uiScale);
         gamePanel.setBoardScale(boardScale);
 
-        int boardSize = BOARD_BASE_PX * boardScale;
-        gamePanel.setPreferredSize(new Dimension(boardSize, boardSize));
+        int boardSize = boardBasePx * boardScale;
+        if (boardScale < MIN_BOARD_SCALE || boardSize <= 0) {
+            boardScale = MIN_BOARD_SCALE;
+            boardSize = boardBasePx;
+        }
+
+        Dimension boardDimension = new Dimension(boardSize, boardSize);
+        gamePanel.setPreferredSize(boardDimension);
+        gamePanel.setMinimumSize(boardDimension);
+        gamePanel.setMaximumSize(boardDimension);
+        gamePanel.revalidate();
 
         centerWrapper.revalidate();
+        centerWrapper.repaint();
         revalidate();
         repaint();
+
+        if (gamePanel.getPreferredSize().width <= 0) {
+            Dimension fallback = new Dimension(boardBasePx, boardBasePx);
+            gamePanel.setPreferredSize(fallback);
+            gamePanel.setMinimumSize(fallback);
+            gamePanel.setMaximumSize(fallback);
+            gamePanel.revalidate();
+            centerWrapper.revalidate();
+        }
+
+        System.out.println("Center available: " + availableW + "x" + availableH
+                + ", boardScale=" + boardScale
+                + ", gamePanel preferred=" + gamePanel.getPreferredSize().width + "x"
+                + gamePanel.getPreferredSize().height);
     }
 
     private void applyFixedPanelWidth(JPanel panel, int width) {
         panel.setPreferredSize(new Dimension(width, 1));
-        panel.setMinimumSize(new Dimension(width, 0));
+        panel.setMinimumSize(new Dimension(width, 1));
         panel.setMaximumSize(new Dimension(width, Integer.MAX_VALUE));
+    }
+
+    private int resolveBoardBasePx() {
+        try {
+            return Math.max(1, assets.getImage("board_octagon_768_sym.png").getWidth());
+        } catch (RuntimeException ex) {
+            return DEFAULT_BOARD_BASE_PX;
+        }
     }
 
     private int clamp(int value, int min, int max) {
