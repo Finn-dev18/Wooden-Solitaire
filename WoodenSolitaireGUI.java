@@ -14,6 +14,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
+import java.nio.file.Paths;
 
 public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     private static final Color COLOR_BG = new Color(39, 30, 112);
@@ -29,7 +30,8 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
 
     private final AssetManager assets = new AssetManager();
     private final GameModel model = new GameModel();
-    private final LeaderboardManager leaderboard = new LeaderboardManager();
+    private final LeaderboardManager classicLeaderboard = new LeaderboardManager(Paths.get("classic_leaderboard.json"));
+    private final LeaderboardManager powerupsLeaderboard = new LeaderboardManager(Paths.get("powerups_leaderboard.json"));
     private final GamePanel gamePanel;
     private final UIPanelLeftPowerups leftPanel;
     private final UIPanelRightLeaderboard rightPanel;
@@ -49,8 +51,8 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
 
         gamePanel = new GamePanel(assets, model, this);
         leftPanel = new UIPanelLeftPowerups(assets, model, this);
-        rightPanel = new UIPanelRightLeaderboard(assets, model, leaderboard, this);
-        overlayPanel = new OverlayPanel(assets, model, leaderboard, this);
+        rightPanel = new UIPanelRightLeaderboard(assets, model, classicLeaderboard, powerupsLeaderboard, this);
+        overlayPanel = new OverlayPanel(assets, model, this);
 
         centerWrapper = new JPanel(new GridBagLayout());
         centerWrapper.setOpaque(true);
@@ -105,10 +107,21 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         enableFullscreen();
         updateScale();
 
-        overlayPanel.setOverlayState(OverlayState.PRE_GAME_NAME);
+        overlayPanel.setOverlayState(OverlayState.MODE_SELECT);
 
         Timer repaintTimer = new Timer(1000 / 30, event -> repaint());
         repaintTimer.start();
+    }
+
+    public LeaderboardManager getActiveLeaderboard() {
+        return model.getMode() == GameMode.CLASSIC ? classicLeaderboard : powerupsLeaderboard;
+    }
+
+    public void setMode(GameMode mode) {
+        model.setMode(mode);
+        leftPanel.repaint();
+        rightPanel.repaint();
+        updateScale();
     }
 
     private void enableFullscreen() {
@@ -130,10 +143,11 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
 
         int nextUiScale = UI_SCALE;
 
-        int leftWidth = BASE_LEFT_WIDTH * nextUiScale;
+        int leftWidth = model.isPowerupsEnabled() ? BASE_LEFT_WIDTH * nextUiScale : 0;
         int rightWidth = BASE_RIGHT_WIDTH * nextUiScale;
 
         applyFixedPanelWidth(leftPanel, leftWidth, frameHeight);
+        leftPanel.setVisible(leftWidth > 0);
         applyFixedPanelWidth(rightPanel, rightWidth, frameHeight);
 
         int availableW = Math.max(1, frameWidth - leftWidth - rightWidth - (CENTER_MARGIN * 2));
@@ -163,15 +177,6 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         centerWrapper.repaint();
         revalidate();
         repaint();
-
-        if (gamePanel.getPreferredSize().width <= 0) {
-            Dimension fallback = new Dimension(BOARD_BASE_PX, TOP_UI_MARGIN + BOARD_BASE_PX + (CENTER_MARGIN * 2));
-            gamePanel.setPreferredSize(fallback);
-            gamePanel.setMinimumSize(fallback);
-            gamePanel.setMaximumSize(fallback);
-            gamePanel.revalidate();
-            centerWrapper.revalidate();
-        }
     }
 
     private void applyFixedPanelWidth(JPanel panel, int width, int frameHeight) {
@@ -216,9 +221,10 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     }
 
     public void handleEscape() {
-        if (overlayPanel.getOverlayState() == OverlayState.NONE) {
+        OverlayState currentState = overlayPanel.getOverlayState();
+        if (currentState == OverlayState.NONE) {
             overlayPanel.setOverlayState(OverlayState.MENU);
-        } else if (overlayPanel.getOverlayState() == OverlayState.MENU) {
+        } else if (currentState == OverlayState.MENU) {
             overlayPanel.setOverlayState(OverlayState.NONE);
         }
     }
@@ -270,7 +276,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
     public void requestRestart() {
         model.resetGame();
         gameOverHandled = false;
-        overlayPanel.setOverlayState(OverlayState.PRE_GAME_NAME);
+        overlayPanel.setOverlayState(OverlayState.MODE_SELECT);
         onModelUpdated();
     }
 

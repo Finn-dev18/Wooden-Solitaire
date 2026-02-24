@@ -23,7 +23,8 @@ public class UIPanelRightLeaderboard extends JPanel {
 
     private final AssetManager assets;
     private final GameModel model;
-    private final LeaderboardManager leaderboard;
+    private final LeaderboardManager classicLeaderboard;
+    private final LeaderboardManager powerupsLeaderboard;
     private final GameUIController controller;
 
     private final StatsPanel statsPanel;
@@ -31,10 +32,11 @@ public class UIPanelRightLeaderboard extends JPanel {
 
     private int scale = 2;
 
-    public UIPanelRightLeaderboard(AssetManager assets, GameModel model, LeaderboardManager leaderboard, GameUIController controller) {
+    public UIPanelRightLeaderboard(AssetManager assets, GameModel model, LeaderboardManager classicLeaderboard, LeaderboardManager powerupsLeaderboard, GameUIController controller) {
         this.assets = assets;
         this.model = model;
-        this.leaderboard = leaderboard;
+        this.classicLeaderboard = classicLeaderboard;
+        this.powerupsLeaderboard = powerupsLeaderboard;
         this.controller = controller;
 
         setOpaque(true);
@@ -114,10 +116,11 @@ public class UIPanelRightLeaderboard extends JPanel {
             g2d.setColor(COLOR_TEXT);
             g2d.setFont(UIFonts.h1(scale));
             lineHeight = g2d.getFontMetrics().getHeight() + 2;
-            g2d.drawString("LEADERBOARD", x, y);
+            g2d.drawString(model.getMode() == GameMode.CLASSIC ? "LEADERBOARD (CLASSIC)" : "LEADERBOARD (POWERUPS)", x, y);
             y += lineHeight;
 
-            List<LeaderboardManager.Entry> entries = leaderboard.getTop10();
+            LeaderboardManager activeLeaderboard = model.getMode() == GameMode.CLASSIC ? classicLeaderboard : powerupsLeaderboard;
+            List<LeaderboardManager.Entry> entries = activeLeaderboard.getTop10();
             g2d.setFont(UIFonts.body(scale));
             lineHeight = g2d.getFontMetrics().getHeight() + 2;
             for (int i = 0; i < entries.size(); i++) {
