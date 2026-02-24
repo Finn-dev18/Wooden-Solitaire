@@ -141,7 +141,7 @@ public class UIPanelRightLeaderboard extends JPanel {
             y += lineHeight;
             g2d.drawString(ellipsis("Spieler: " + model.getPlayerName(), bodyMetrics, statsContentW), statsContentX, y);
             y += lineHeight;
-            g2d.drawString(ellipsis("Credits: " + model.getCredits(), bodyMetrics, statsContentW), statsContentX, y);
+            g2d.drawString(ellipsis("Total Credits: " + model.getCredits(), bodyMetrics, statsContentW), statsContentX, y);
 
             int leaderboardContentX = panelPadding + boxPadding;
             int leaderboardContentY = leaderboardBoxY + boxPadding;
