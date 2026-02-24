@@ -1,3 +1,4 @@
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -9,16 +10,16 @@ import java.util.Random;
 
 public class GameModel {
     public static final int BOARD_SIZE = 7;
-    private static final int INVENTORY_CAP = 5;
 
     private final Board board = new Board();
     private final MoveValidator validator = new MoveValidator();
     private final Map<PowerupType, Integer> charges = new EnumMap<>(PowerupType.class);
     private final Deque<GameSnapshot> history = new ArrayDeque<>();
     private final Random random = new Random();
+    private final PowerupConfig powerupConfig = PowerupConfig.loadFromFile(Paths.get("powerups_config.json"));
+    private final PlayerProfileStore profileStore = new PlayerProfileStore(Paths.get("profiles.json"));
 
     private int movesCount;
-    private int credits;
     private int selectedRow = -1;
     private int selectedCol = -1;
     private boolean[][] validTargets = new boolean[BOARD_SIZE][BOARD_SIZE];
@@ -35,13 +36,13 @@ public class GameModel {
     private GameMode mode = GameMode.POWERUPS;
 
     public GameModel() {
+        profileStore.ensurePlayerProfile(playerName);
         resetGame();
     }
 
     public void resetGame() {
         board.reset();
         movesCount = 0;
-        credits = 0;
         selectedRow = -1;
         selectedCol = -1;
         selectionRow = -1;
@@ -65,7 +66,7 @@ public class GameModel {
     }
 
     public int getMovesCount() { return movesCount; }
-    public int getCredits() { return credits; }
+    public int getCredits() { return profileStore.getCredits(playerName); }
     public int getPegsLeft() { return board.countPegs(); }
     public int getSelectedRow() { return selectedRow; }
     public int getSelectedCol() { return selectedCol; }
@@ -81,6 +82,22 @@ public class GameModel {
     public GameMode getMode() { return mode; }
     public void setMode(GameMode mode) { if (mode != null) this.mode = mode; }
     public boolean isPowerupsEnabled() { return mode == GameMode.POWERUPS; }
+    public int getPowerupCap(PowerupType type) { return powerupConfig.getPerRunCap(type); }
+    public int getPowerupPrice(PowerupType type) { return powerupConfig.getPrice(type); }
+    public int getInventoryCap() { return powerupConfig.getInventoryCap(); }
+
+    public boolean canBuyPowerup(PowerupType type) {
+        if (!isPowerupsEnabled() || type == null || gameOver) return false;
+        int current = charges.getOrDefault(type, 0);
+        int cap = powerupConfig.getPerRunCap(type);
+        if (current >= cap) return false;
+        if (current >= powerupConfig.getInventoryCap()) return false;
+        return getCredits() >= powerupConfig.getPrice(type);
+    }
+
+    public int getMissingCreditsFor(PowerupType type) {
+        return Math.max(0, powerupConfig.getPrice(type) - getCredits());
+    }
 
     public void startTimerNow() {
         startTimeMs = System.currentTimeMillis();
@@ -108,6 +125,7 @@ public class GameModel {
         if (trimmed.isEmpty()) return;
         if (trimmed.length() > 12) trimmed = trimmed.substring(0, 12);
         playerName = trimmed;
+        profileStore.ensurePlayerProfile(playerName);
     }
 
     public boolean isValidCell(int r, int c) {
@@ -151,7 +169,7 @@ public class GameModel {
         board.set(toRow, toCol, '●');
 
         movesCount++;
-        credits += 1;
+        addCreditsForCurrentPlayer(powerupConfig.getCreditsPerValidMove());
         selectedRow = -1;
         selectedCol = -1;
         clearValidTargets();
@@ -159,6 +177,38 @@ public class GameModel {
 
         rollPowerupReward();
         updateGameOver();
+        return true;
+    }
+
+    public boolean tryBuyPowerup(PowerupType type) {
+        if (!isPowerupsEnabled() || type == null || gameOver) {
+            return false;
+        }
+
+        int current = charges.getOrDefault(type, 0);
+        int capThisRun = powerupConfig.getPerRunCap(type);
+        if (current >= capThisRun) {
+            statusMessage = "Cap erreicht: " + type.getLabel();
+            showToast("Cap erreicht");
+            return false;
+        }
+        if (current >= powerupConfig.getInventoryCap()) {
+            statusMessage = "Inventar-Limit erreicht.";
+            showToast("Cap erreicht");
+            return false;
+        }
+
+        int price = powerupConfig.getPrice(type);
+        if (!profileStore.spendCredits(playerName, price)) {
+            int missing = Math.max(0, price - getCredits());
+            statusMessage = "Zu wenig Credits für " + type.getLabel() + ".";
+            showToast("Zu wenig Credits (Need: " + missing + ")");
+            return false;
+        }
+
+        charges.put(type, current + 1);
+        statusMessage = "Gekauft: " + type.getLabel() + " (-" + price + " Credits)";
+        showToast("Gekauft: " + type.getLabel() + " (-" + price + " Credits)");
         return true;
     }
 
@@ -350,29 +400,7 @@ public class GameModel {
     }
 
     private void rollPowerupReward() {
-        if (!isPowerupsEnabled()) return;
-        if (random.nextDouble() >= 0.35) return;
-
-        PowerupType reward = rollByWeight();
-        int current = charges.getOrDefault(reward, 0);
-        if (current >= INVENTORY_CAP) {
-            showToast("Inventar voll: " + reward.getLabel());
-            statusMessage = "Inventar voll für " + reward.getLabel() + ".";
-            return;
-        }
-
-        charges.put(reward, current + 1);
-        showToast("Powerup erhalten: " + reward.getLabel());
-        statusMessage = "Powerup erhalten: " + reward.getLabel();
-    }
-
-    private PowerupType rollByWeight() {
-        double value = random.nextDouble();
-        if (value < 0.30) return PowerupType.UNDO;
-        if (value < 0.55) return PowerupType.SWAP;
-        if (value < 0.75) return PowerupType.BOMB;
-        if (value < 0.90) return PowerupType.BRIDGEJUMP;
-        return PowerupType.RANDSTURM;
+        // Random rewards are intentionally disabled.
     }
 
     private void applyRandsturm(SlideDirection direction) {
@@ -423,7 +451,6 @@ public class GameModel {
         history.push(new GameSnapshot(
                 copyField(board.getField()),
                 movesCount,
-                credits,
                 new EnumMap<>(charges),
                 gameOver,
                 startTimeMs,
@@ -439,7 +466,6 @@ public class GameModel {
             }
         }
         movesCount = snapshot.movesCount;
-        credits = snapshot.credits;
         charges.clear();
         charges.putAll(snapshot.charges);
         gameOver = snapshot.gameOver;
@@ -452,6 +478,13 @@ public class GameModel {
         selectionRow = -1;
         selectionCol = -1;
         clearValidTargets();
+    }
+
+    private void addCreditsForCurrentPlayer(int delta) {
+        if (delta <= 0) {
+            return;
+        }
+        profileStore.addCredits(playerName, delta);
     }
 
     private char[][] copyField(char[][] source) {
@@ -517,11 +550,19 @@ public class GameModel {
     }
 
     private void updateGameOver() {
+        if (gameOver) {
+            return;
+        }
         if (!hasAnyValidMove()) {
             gameOver = true;
             if (endTimeMs == 0) endTimeMs = System.currentTimeMillis();
+            boolean win = board.countPegs() == 1;
+            int bonus = win ? powerupConfig.getCreditsPerGameWinBonus() : powerupConfig.getCreditsPerGameOverBonus();
+            addCreditsForCurrentPlayer(bonus);
             statusMessage = "Keine Züge mehr. Spiel beendet.";
-            credits += 5;
+            if (bonus > 0) {
+                showToast("Bonus: +" + bonus + " Credits");
+            }
         }
     }
 
@@ -543,7 +584,6 @@ public class GameModel {
     private static final class GameSnapshot {
         private final char[][] field;
         private final int movesCount;
-        private final int credits;
         private final Map<PowerupType, Integer> charges;
         private final boolean gameOver;
         private final long startTimeMs;
@@ -552,7 +592,6 @@ public class GameModel {
 
         private GameSnapshot(char[][] field,
                              int movesCount,
-                             int credits,
                              Map<PowerupType, Integer> charges,
                              boolean gameOver,
                              long startTimeMs,
@@ -560,7 +599,6 @@ public class GameModel {
                              String statusMessage) {
             this.field = field;
             this.movesCount = movesCount;
-            this.credits = credits;
             this.charges = charges;
             this.gameOver = gameOver;
             this.startTimeMs = startTimeMs;

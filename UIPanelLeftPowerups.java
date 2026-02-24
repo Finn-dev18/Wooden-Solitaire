@@ -21,7 +21,7 @@ public class UIPanelLeftPowerups extends JPanel {
     private static final int BASE_BUTTON_HEIGHT = 72;
     private static final int BASE_ICON_SIZE = 16;
     private static final int BASE_CONTENT_PADDING = 18;
-    private static final int BASE_CHARGES_AREA_WIDTH = 64;
+    private static final int BASE_CHARGES_AREA_WIDTH = 80;
     private static final int BASE_ICON_AREA_WIDTH = 34;
 
     private final AssetManager assets;
@@ -54,7 +54,12 @@ public class UIPanelLeftPowerups extends JPanel {
                 }
                 PowerupType released = findButton(e.getX(), e.getY());
                 if (pressed != null && pressed == released) {
-                    model.activatePowerup(released);
+                    int charges = model.getCharges().getOrDefault(released, 0);
+                    if (charges > 0) {
+                        model.activatePowerup(released);
+                    } else {
+                        model.tryBuyPowerup(released);
+                    }
                     controller.onModelUpdated();
                 }
                 pressed = null;
@@ -126,7 +131,7 @@ public class UIPanelLeftPowerups extends JPanel {
         g2d.setFont(UIFonts.small(scale));
         lineHeight = g2d.getFontMetrics().getHeight() + 2;
         if (model.isPowerupsEnabled()) {
-            g2d.drawString("Hotkeys: 1..5", x, y + lineHeight);
+            g2d.drawString("Hotkeys: 1..5 (use)", x, y + lineHeight);
         } else {
             g2d.drawString("POWERUPS DISABLED", x, y + lineHeight);
         }
@@ -151,7 +156,7 @@ public class UIPanelLeftPowerups extends JPanel {
             FontMetrics bodyFm = g2d.getFontMetrics();
             int bodyLineHeight = bodyFm.getHeight() + 2;
 
-            int minButtonHeight = contentPaddingVertical * 2 + titleLineHeight + (bodyLineHeight * 2);
+            int minButtonHeight = contentPaddingVertical * 2 + titleLineHeight + (bodyLineHeight * 3);
             int buttonHeight = Math.max((int) Math.round(BASE_BUTTON_HEIGHT * scale), minButtonHeight);
 
             Rectangle rect = new Rectangle(x, y, buttonWidth, buttonHeight);
@@ -166,11 +171,7 @@ public class UIPanelLeftPowerups extends JPanel {
 
             int textBaseX = rect.x + contentPaddingLeft + iconAreaWidth;
             int chargesAreaX = rect.x + rect.width - contentPaddingRight - chargesAreaWidth;
-            int maxTextWidth = chargesAreaX - textBaseX;
-            if (maxTextWidth < 0) {
-                maxTextWidth = 0;
-            }
-
+            int maxTextWidth = Math.max(0, chargesAreaX - textBaseX);
             int textTopY = rect.y + contentPaddingVertical;
 
             g2d.setFont(UIFonts.h2(scale));
@@ -185,11 +186,19 @@ public class UIPanelLeftPowerups extends JPanel {
             drawWrappedText(g2d, type.getDescription(), textBaseX, descriptionBaseline, maxTextWidth, 2, bodyLineHeight);
 
             int charges = model.getCharges().getOrDefault(type, 0);
-            String chargeText = "x" + charges + "/5";
+            int cap = model.getPowerupCap(type);
+            String chargeText = "x" + charges + "/" + cap;
             FontMetrics chargesFm = g2d.getFontMetrics();
             int chargeWidth = chargesFm.stringWidth(chargeText);
             int chargeX = chargesAreaX + Math.max(0, chargesAreaWidth - chargeWidth);
             g2d.drawString(chargeText, chargeX, titleBaseline);
+
+            int infoBaseline = descriptionBaseline + (2 * bodyLineHeight);
+            int price = model.getPowerupPrice(type);
+            g2d.drawString(fitWithEllipsis("Cost: " + price, bodyFm, maxTextWidth), textBaseX, infoBaseline);
+
+            String buyState = model.canBuyPowerup(type) ? "Buy" : unavailableLabel(type);
+            g2d.drawString(fitWithEllipsis(buyState, bodyFm, chargesAreaWidth), chargesAreaX, infoBaseline);
 
             if (model.getActivePowerup() == type) {
                 g2d.setColor(new Color(252, 16, 87));
@@ -200,6 +209,21 @@ public class UIPanelLeftPowerups extends JPanel {
         }
 
         g2d.dispose();
+    }
+
+    private String unavailableLabel(PowerupType type) {
+        int charges = model.getCharges().getOrDefault(type, 0);
+        if (charges > 0) {
+            return "Use";
+        }
+        if (charges >= model.getPowerupCap(type) || charges >= model.getInventoryCap()) {
+            return "Cap erreicht";
+        }
+        int missing = model.getMissingCreditsFor(type);
+        if (missing > 0) {
+            return "Need: " + missing;
+        }
+        return "Buy";
     }
 
     List<String> wrapLines(String text, FontMetrics fm, int maxWidth) {
@@ -291,6 +315,11 @@ public class UIPanelLeftPowerups extends JPanel {
     }
 
     private BufferedImage getButtonImage(PowerupType type) {
+        boolean hasCharge = model.getCharges().getOrDefault(type, 0) > 0;
+        boolean canBuy = model.canBuyPowerup(type);
+        if (!hasCharge && !canBuy) {
+            return assets.getImage("ui_button_disabled_260x72.png");
+        }
         if (pressed == type) return assets.getImage("ui_button_pressed_260x72.png");
         if (hovered == type) return assets.getImage("ui_button_hover_260x72.png");
         return assets.getImage("ui_button_normal_260x72.png");
