@@ -32,6 +32,7 @@ public class GameModel {
     private String playerName = "Player";
     private long startTimeMs;
     private long endTimeMs;
+    private GameMode mode = GameMode.POWERUPS;
 
     public GameModel() {
         resetGame();
@@ -77,6 +78,9 @@ public class GameModel {
     public int getSelectionCol() { return selectionCol; }
     public String getToastMessage() { return toastMessage; }
     public String getPlayerName() { return playerName; }
+    public GameMode getMode() { return mode; }
+    public void setMode(GameMode mode) { if (mode != null) this.mode = mode; }
+    public boolean isPowerupsEnabled() { return mode == GameMode.POWERUPS; }
 
     public void startTimerNow() {
         startTimeMs = System.currentTimeMillis();
@@ -159,6 +163,11 @@ public class GameModel {
     }
 
     public void activatePowerup(PowerupType type) {
+        if (!isPowerupsEnabled()) {
+            statusMessage = "Classic mode: no powerups";
+            showToast("Classic mode: no powerups");
+            return;
+        }
         if (type == null || gameOver) return;
         if (charges.getOrDefault(type, 0) <= 0) {
             statusMessage = "Keine Ladungen für " + type.getLabel() + ".";
@@ -215,6 +224,11 @@ public class GameModel {
     }
 
     public void applyPowerupClick(int r, int c) {
+        if (!isPowerupsEnabled()) {
+            statusMessage = "Classic mode: no powerups";
+            showToast("Classic mode: no powerups");
+            return;
+        }
         if (activePowerup == null) return;
 
         switch (activePowerup) {
@@ -336,6 +350,7 @@ public class GameModel {
     }
 
     private void rollPowerupReward() {
+        if (!isPowerupsEnabled()) return;
         if (random.nextDouble() >= 0.35) return;
 
         PowerupType reward = rollByWeight();

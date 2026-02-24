@@ -40,14 +40,14 @@ public class UIPanelLeftPowerups extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if (controller.isOverlayActive()) return;
+                if (controller.isOverlayActive() || !model.isPowerupsEnabled()) return;
                 pressed = findButton(e.getX(), e.getY());
                 repaint();
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (controller.isOverlayActive()) {
+                if (controller.isOverlayActive() || !model.isPowerupsEnabled()) {
                     pressed = null;
                     repaint();
                     return;
@@ -70,7 +70,7 @@ public class UIPanelLeftPowerups extends JPanel {
         addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                if (controller.isOverlayActive()) {
+                if (controller.isOverlayActive() || !model.isPowerupsEnabled()) {
                     hovered = null;
                     repaint();
                     return;
@@ -125,8 +125,21 @@ public class UIPanelLeftPowerups extends JPanel {
 
         g2d.setFont(UIFonts.small(scale));
         lineHeight = g2d.getFontMetrics().getHeight() + 2;
-        g2d.drawString("Hotkeys: 1..5", x, y + lineHeight);
+        if (model.isPowerupsEnabled()) {
+            g2d.drawString("Hotkeys: 1..5", x, y + lineHeight);
+        } else {
+            g2d.drawString("POWERUPS DISABLED", x, y + lineHeight);
+        }
         y += lineHeight;
+
+        if (!model.isPowerupsEnabled()) {
+            g2d.setColor(COLOR_TEXT_MUTED);
+            g2d.setFont(UIFonts.body(scale));
+            g2d.drawString("Classic mode: no powerups", x, y + lineHeight);
+            buttonRects.clear();
+            g2d.dispose();
+            return;
+        }
 
         buttonRects.clear();
         for (PowerupType type : PowerupType.values()) {

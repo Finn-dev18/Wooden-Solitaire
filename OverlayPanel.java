@@ -29,7 +29,6 @@ public class OverlayPanel extends JPanel {
 
     private final AssetManager assets;
     private final GameModel model;
-    private final LeaderboardManager leaderboard;
     private final WoodenSolitaireGUI controller;
     private OverlayState state = OverlayState.NONE;
 
@@ -43,10 +42,9 @@ public class OverlayPanel extends JPanel {
     private Timer cursorTimer;
     private boolean top10Candidate;
 
-    public OverlayPanel(AssetManager assets, GameModel model, LeaderboardManager leaderboard, WoodenSolitaireGUI controller) {
+    public OverlayPanel(AssetManager assets, GameModel model, WoodenSolitaireGUI controller) {
         this.assets = assets;
         this.model = model;
-        this.leaderboard = leaderboard;
         this.controller = controller;
         setOpaque(false);
         setFocusable(true);
@@ -137,27 +135,19 @@ public class OverlayPanel extends JPanel {
                 if (!isNameEntryActive()) {
                     return;
                 }
-                if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-                    if (!nameInput.isEmpty()) {
-                        nameInput = nameInput.substring(0, nameInput.length() - 1);
-                        repaint();
-                    }
+                if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE && !nameInput.isEmpty()) {
+                    nameInput = nameInput.substring(0, nameInput.length() - 1);
+                    repaint();
                 }
             }
 
             @Override
             public void keyTyped(KeyEvent e) {
-                if (!isNameEntryActive()) {
-                    return;
-                }
-                if (!nameInputFocused) {
+                if (!isNameEntryActive() || !nameInputFocused) {
                     return;
                 }
                 char ch = e.getKeyChar();
-                if (Character.isISOControl(ch)) {
-                    return;
-                }
-                if (nameInput.length() >= MAX_NAME_LENGTH) {
+                if (Character.isISOControl(ch) || nameInput.length() >= MAX_NAME_LENGTH) {
                     return;
                 }
                 nameInput += ch;
@@ -196,6 +186,14 @@ public class OverlayPanel extends JPanel {
                     submitNameAndStart();
                 }
                 break;
+            case CLASSIC_MODE:
+                controller.setMode(GameMode.CLASSIC);
+                controller.setOverlayState(OverlayState.PRE_GAME_NAME);
+                break;
+            case POWERUPS_MODE:
+                controller.setMode(GameMode.POWERUPS);
+                controller.setOverlayState(OverlayState.PRE_GAME_NAME);
+                break;
             case QUIT:
                 System.exit(0);
                 break;
@@ -203,15 +201,12 @@ public class OverlayPanel extends JPanel {
                 controller.setOverlayState(OverlayState.NONE);
                 break;
             case NEW_GAME:
+            case RESTART:
                 model.resetGame();
-                controller.setOverlayState(OverlayState.PRE_GAME_NAME);
+                controller.setOverlayState(OverlayState.MODE_SELECT);
                 break;
             case MENU:
                 controller.setOverlayState(OverlayState.MENU);
-                break;
-            case RESTART:
-                model.resetGame();
-                controller.setOverlayState(OverlayState.PRE_GAME_NAME);
                 break;
             default:
                 break;
@@ -246,8 +241,8 @@ public class OverlayPanel extends JPanel {
                 model.getPegsLeft(),
                 durationSeconds,
                 System.currentTimeMillis(),
-                true);
-        leaderboard.addEntry(entry);
+                model.isPowerupsEnabled());
+        controller.getActiveLeaderboard().addEntry(entry);
         top10Candidate = false;
     }
 
@@ -260,8 +255,8 @@ public class OverlayPanel extends JPanel {
                 model.getPegsLeft(),
                 durationSeconds,
                 System.currentTimeMillis(),
-                true);
-        return leaderboard.isTop10Candidate(entry);
+                model.isPowerupsEnabled());
+        return controller.getActiveLeaderboard().isTop10Candidate(entry);
     }
 
     public boolean canStart() {
@@ -344,7 +339,9 @@ public class OverlayPanel extends JPanel {
     }
 
     private void drawOverlayContent(Graphics2D g2d, Layout layout) {
-        if (state == OverlayState.PRE_GAME_NAME) {
+        if (state == OverlayState.MODE_SELECT) {
+            drawModeSelect(g2d, layout);
+        } else if (state == OverlayState.PRE_GAME_NAME) {
             drawPreGame(g2d, layout);
         } else if (state == OverlayState.MENU) {
             drawMenu(g2d, layout);
@@ -354,6 +351,9 @@ public class OverlayPanel extends JPanel {
     }
 
     private String getOverlayTitle() {
+        if (state == OverlayState.MODE_SELECT) {
+            return "SELECT MODE";
+        }
         if (state == OverlayState.MENU) {
             return "MENU";
         }
@@ -364,6 +364,19 @@ public class OverlayPanel extends JPanel {
             return "GAME OVER";
         }
         return "";
+    }
+
+    private void drawModeSelect(Graphics2D g2d, Layout layout) {
+        int rowStartY = layout.contentRect.y + Math.max(0, (layout.contentRect.height - (2 * (int) Math.round(BUTTON_HEIGHT_PX * controller.getScale()) - (int) Math.round(BUTTON_GAP_PX * controller.getScale()))) / 2);
+        drawButtonRow(g2d, layout.panelRect, rowStartY, OverlayButton.CLASSIC_MODE, OverlayButton.POWERUPS_MODE);
+        for (OverlayButton button : new OverlayButton[]{OverlayButton.CLASSIC_MODE, OverlayButton.POWERUPS_MODE}) {
+            Rectangle rect = buttonRects.get(button);
+            if (rect != null) {
+                g2d.setFont(UIFonts.small(controller.getScale()));
+                g2d.setColor(COLOR_TEXT_MUTED);
+                drawCenteredTextAtBaseline(g2d, button.getSubLabel(), rect.x + rect.width / 2, rect.y + rect.height - (int) Math.round(10 * controller.getScale()));
+            }
+        }
     }
 
     private void drawPreGame(Graphics2D g2d, Layout layout) {
@@ -418,6 +431,10 @@ public class OverlayPanel extends JPanel {
         g2d.drawImage(inputImage, inputX, inputY, inputWidth, inputHeight, null);
 
         String text = nameInput == null ? "" : nameInput;
+        String visibleText = text;
+        if (isNameEntryActive() && nameInputFocused && cursorOn) {
+            visibleText += "_";
+        }
         g2d.setFont(UIFonts.h2(controller.getScale()));
         g2d.setColor(COLOR_TEXT_INPUT);
         java.awt.FontMetrics fm = g2d.getFontMetrics();
@@ -428,7 +445,7 @@ public class OverlayPanel extends JPanel {
         int innerH = inputHeight - padY * 2;
         int baselineY = innerY + (innerH - fm.getHeight()) / 2 + fm.getAscent();
         baselineY += (int) Math.round(6 * scale);
-        g2d.drawString(text, textX, baselineY);
+        g2d.drawString(visibleText, textX, baselineY);
 
         Rectangle tabRect = new Rectangle(
                 inputX + (int) Math.round(18 * scale),
@@ -476,11 +493,11 @@ public class OverlayPanel extends JPanel {
         if (disabled) {
             image = assets.getImage("ui_button_disabled_260x72.png");
         } else if (pressed == button) {
-            image = assets.getImage(getPressedAsset(button));
+            image = assets.getImage("ui_button_pressed_260x72.png");
         } else if (hovered == button) {
-            image = assets.getImage(getHoverAsset(button));
+            image = assets.getImage("ui_button_hover_260x72.png");
         } else {
-            image = assets.getImage(getNormalAsset(button));
+            image = assets.getImage("ui_button_normal_260x72.png");
         }
         g2d.drawImage(image, rect.x, rect.y, rect.width, rect.height, null);
 
@@ -489,7 +506,7 @@ public class OverlayPanel extends JPanel {
         String label = button.getLabel();
         int textWidth = g2d.getFontMetrics().stringWidth(label);
         int textX = rect.x + (rect.width - textWidth) / 2;
-        int textY = centeredTextBaseline(g2d, rect.y, rect.height);
+        int textY = centeredTextBaseline(g2d, rect.y, rect.height) - (button.hasSubLabel() ? (int) Math.round(9 * controller.getScale()) : 0);
         g2d.drawString(label, textX, textY);
     }
 
@@ -511,34 +528,34 @@ public class OverlayPanel extends JPanel {
         g2d.drawString(text, textX, baselineY);
     }
 
-    private String getNormalAsset(OverlayButton button) {
-        return "ui_button_normal_260x72.png";
-    }
-
-    private String getHoverAsset(OverlayButton button) {
-        return "ui_button_hover_260x72.png";
-    }
-
-    private String getPressedAsset(OverlayButton button) {
-        return "ui_button_pressed_260x72.png";
-    }
-
     enum OverlayButton {
-        START("START"),
-        QUIT("QUIT"),
-        RESUME("RESUME"),
-        NEW_GAME("NEW GAME"),
-        MENU("MENU"),
-        RESTART("RESTART");
+        CLASSIC_MODE("CLASSIC", "No Powerups"),
+        POWERUPS_MODE("POWERUPS", "Powerups Enabled"),
+        START("START", null),
+        QUIT("QUIT", null),
+        RESUME("RESUME", null),
+        NEW_GAME("NEW GAME", null),
+        MENU("MENU", null),
+        RESTART("RESTART", null);
 
         private final String label;
+        private final String subLabel;
 
-        OverlayButton(String label) {
+        OverlayButton(String label, String subLabel) {
             this.label = label;
+            this.subLabel = subLabel;
         }
 
         public String getLabel() {
             return label;
+        }
+
+        public String getSubLabel() {
+            return subLabel;
+        }
+
+        public boolean hasSubLabel() {
+            return subLabel != null;
         }
     }
 

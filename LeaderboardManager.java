@@ -1,7 +1,6 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -11,10 +10,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LeaderboardManager {
-    private static final Path STORAGE_PATH = Paths.get("leaderboard.json");
+    private final Path storagePath;
     private final List<Entry> entries = new ArrayList<>();
 
-    public LeaderboardManager() {
+    public LeaderboardManager(Path storagePath) {
+        this.storagePath = storagePath;
         load();
     }
 
@@ -40,13 +40,14 @@ public class LeaderboardManager {
             }
         }
 
+        Entry normalizedEntry = new Entry(normalizedName, entry.score(), entry.pegsLeft(), entry.durationSeconds(), entry.timestamp(), entry.powerupsEnabled());
         if (bestExisting != null) {
-            if (entryComparator().compare(entry, bestExisting) < 0) {
+            if (entryComparator().compare(normalizedEntry, bestExisting) < 0) {
                 entries.removeIf(existing -> normalizeName(existing.name()).equals(normalizedName));
-                entries.add(new Entry(normalizedName, entry.score(), entry.pegsLeft(), entry.durationSeconds(), entry.timestamp(), entry.powerupsEnabled()));
+                entries.add(normalizedEntry);
             }
         } else {
-            entries.add(new Entry(normalizedName, entry.score(), entry.pegsLeft(), entry.durationSeconds(), entry.timestamp(), entry.powerupsEnabled()));
+            entries.add(normalizedEntry);
         }
 
         sortTrimTop10();
@@ -61,11 +62,11 @@ public class LeaderboardManager {
     }
 
     private void load() {
-        if (!Files.exists(STORAGE_PATH)) {
+        if (!Files.exists(storagePath)) {
             return;
         }
         try {
-            String json = Files.readString(STORAGE_PATH);
+            String json = Files.readString(storagePath);
             Pattern pattern = Pattern.compile("\\{\\s*\\\"name\\\"\\s*:\\s*\\\"(.*?)\\\"\\s*,\\s*\\\"score\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"pegsLeft\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"durationSeconds\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"timestamp\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"powerupsEnabled\\\"\\s*:\\s*(true|false)\\s*\\}");
             Matcher matcher = pattern.matcher(json);
             while (matcher.find()) {
@@ -84,7 +85,6 @@ public class LeaderboardManager {
             // Ignore corrupted files.
         }
     }
-
 
     private void deduplicateEntries() {
         Map<String, Entry> bestByName = new LinkedHashMap<>();
@@ -136,7 +136,7 @@ public class LeaderboardManager {
         }
         builder.append("\n  ]\n}\n");
         try {
-            Files.writeString(STORAGE_PATH, builder.toString());
+            Files.writeString(storagePath, builder.toString());
         } catch (IOException e) {
             // Ignore persistence errors.
         }
