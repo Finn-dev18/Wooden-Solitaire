@@ -5,4 +5,5 @@ public interface GameUIController {
     void requestRestart();
     boolean isOverlayActive();
     OverlayState getOverlayState();
+    void setOverlayState(OverlayState state);
 }
