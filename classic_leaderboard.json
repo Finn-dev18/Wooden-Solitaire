@@ -1,0 +1,13 @@
+{
+  "entries": [
+    {"name":"Finn","score":4622,"pegsLeft":3,"durationSeconds":29,"timestamp":1771927396795,"powerupsEnabled":false},
+    {"name":"Benjamib","score":4598,"pegsLeft":3,"durationSeconds":41,"timestamp":1770882451460,"powerupsEnabled":false},
+    {"name":"Siddi","score":4528,"pegsLeft":3,"durationSeconds":76,"timestamp":1770809474518,"powerupsEnabled":false},
+    {"name":"Jona","score":4350,"pegsLeft":5,"durationSeconds":45,"timestamp":1770882316159,"powerupsEnabled":false},
+    {"name":"Balin","score":4274,"pegsLeft":5,"durationSeconds":83,"timestamp":1770809201601,"powerupsEnabled":false},
+    {"name":"Elias","score":4266,"pegsLeft":5,"durationSeconds":87,"timestamp":1770809371651,"powerupsEnabled":false},
+    {"name":"Benjamin","score":4134,"pegsLeft":7,"durationSeconds":33,"timestamp":1770802797187,"powerupsEnabled":false},
+    {"name":"Henry","score":4084,"pegsLeft":7,"durationSeconds":58,"timestamp":1771926242868,"powerupsEnabled":false},
+    {"name":"Frederfick","score":3938,"pegsLeft":8,"durationSeconds":71,"timestamp":1770797996686,"powerupsEnabled":false}
+  ]
+}

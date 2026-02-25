@@ -1,0 +1,8 @@
+{
+  "entries": [
+    {"name":"Hémry","score":4768,"pegsLeft":1,"durationSeconds":76,"timestamp":1772003579481,"powerupsEnabled":true},
+    {"name":"Finn","score":4582,"pegsLeft":3,"durationSeconds":49,"timestamp":1772005146375,"powerupsEnabled":true},
+    {"name":"Henry","score":4556,"pegsLeft":3,"durationSeconds":62,"timestamp":1772005426575,"powerupsEnabled":true},
+    {"name":"Aiden","score":4296,"pegsLeft":4,"durationSeconds":132,"timestamp":1772003868570,"powerupsEnabled":true}
+  ]
+}
