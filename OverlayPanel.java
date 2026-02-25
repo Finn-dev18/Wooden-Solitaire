@@ -208,6 +208,9 @@ public class OverlayPanel extends JPanel {
             case MENU:
                 controller.setOverlayState(OverlayState.MENU);
                 break;
+            case CLOSE:
+                controller.setOverlayState(OverlayState.NONE);
+                break;
             default:
                 break;
         }
@@ -347,6 +350,8 @@ public class OverlayPanel extends JPanel {
             drawMenu(g2d, layout);
         } else if (state == OverlayState.GAME_OVER) {
             drawGameOver(g2d, layout);
+        } else if (state == OverlayState.INFO_PAGE) {
+            drawInfoPage(g2d, layout);
         }
     }
 
@@ -362,6 +367,9 @@ public class OverlayPanel extends JPanel {
         }
         if (state == OverlayState.GAME_OVER) {
             return "GAME OVER";
+        }
+        if (state == OverlayState.INFO_PAGE) {
+            return "INFO";
         }
         return "";
     }
@@ -458,6 +466,53 @@ public class OverlayPanel extends JPanel {
         drawCenteredText(g2d, "NAME", tabRect);
     }
 
+
+    private void drawInfoPage(Graphics2D g2d, Layout layout) {
+        int scale = controller.getScale();
+        g2d.setFont(UIFonts.body(scale));
+        g2d.setColor(COLOR_TEXT_MUTED);
+
+        String[] lines = new String[]{
+                "A) Spielregeln",
+                "- Ziel: so wenig Pegs wie moeglich (ideal 1)",
+                "- Standardzug: ueber 1 Kugel springen, diese verschwindet",
+                "- Gueltige Zuege nur horizontal/vertikal",
+                "",
+                "B) Credits & Shop",
+                "- Credits gibt es pro gueltigem Standardzug (plus evtl. Bonus)",
+                "- Powerups kauft man mit Credits, pro Runde nur begrenzt (Caps)",
+                "",
+                "C) Powerups",
+                "- UNDO: macht den letzten Schritt rueckgaengig",
+                "- MOVE: versetzt eine Kugel auf ein leeres Feld",
+                "- BOMB: entfernt eine Kugel",
+                "- BRIDGE: Sprungdistanz 3, entfernt 2 Zwischenkugeln",
+                "- RANDSTURM: schiebt alle Kugeln zufaellig zu einer Wand",
+                "",
+                "D) Steuerung",
+                "- Maus: auswaehlen/ziehen je nach Modus",
+                "- Hotkeys 1..5: Powerup benutzen (nicht kaufen)",
+                "- ? / i: Info oeffnen",
+                "- ESC: Overlay schliessen"
+        };
+
+        int lineHeight = g2d.getFontMetrics().getHeight() + Math.max(2, (int) Math.round(2 * scale));
+        int textX = layout.contentRect.x;
+        int textY = layout.contentRect.y + lineHeight;
+        int buttonHeight = (int) Math.round(BUTTON_HEIGHT_PX * scale);
+        int buttonY = layout.contentRect.y + layout.contentRect.height - buttonHeight;
+
+        for (String line : lines) {
+            if (textY >= buttonY - lineHeight) {
+                break;
+            }
+            g2d.drawString(line, textX, textY);
+            textY += lineHeight;
+        }
+
+        drawButtonRow(g2d, layout.panelRect, buttonY, OverlayButton.CLOSE);
+    }
+
     private void drawButtonRow(Graphics2D g2d, Rectangle panelRect, int y, OverlayButton... buttons) {
         int buttonWidth = (int) Math.round(ROW_BUTTON_WIDTH_PX * controller.getScale());
         int buttonHeight = (int) Math.round(BUTTON_HEIGHT_PX * controller.getScale());
@@ -536,7 +591,8 @@ public class OverlayPanel extends JPanel {
         RESUME("RESUME", null),
         NEW_GAME("NEW GAME", null),
         MENU("MENU", null),
-        RESTART("RESTART", null);
+        RESTART("RESTART", null),
+        CLOSE("CLOSE", null);
 
         private final String label;
         private final String subLabel;
