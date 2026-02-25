@@ -153,7 +153,7 @@ public class UIPanelRightLeaderboard extends JPanel {
             h1Metrics = g2d.getFontMetrics();
             lineHeight = h1Metrics.getHeight() + 4;
             int leaderboardY = leaderboardContentY + h1Metrics.getAscent();
-            String leaderboardTitle = model.getMode() == GameMode.CLASSIC ? "LEADERBOARD (CLASSIC)" : "LEADERBOARD (POWERUPS)";
+            String leaderboardTitle = "LEADERBOARD";
             g2d.drawString(ellipsis(leaderboardTitle, h1Metrics, leaderboardContentW), leaderboardContentX, leaderboardY);
             leaderboardY += lineHeight;
 

@@ -212,11 +212,22 @@ public class GamePanel extends JPanel {
     private void drawStatus(Graphics2D g2d) {
         g2d.setColor(new Color(12, 9, 48, 220));
         int statusHeight = Math.max(30, topUiMargin - 20);
-        g2d.fillRect(12, 12, getWidth() - 24, statusHeight);
+        int barX = 12;
+        int barY = 12;
+        int barW = getWidth() - 24;
+        g2d.fillRect(barX, barY, barW, statusHeight);
+
+        String modeText = model.getMode() == GameMode.CLASSIC ? "MODE: CLASSIC" : "MODE: POWERUPS";
+        g2d.setColor(new Color(43, 253, 223));
+        g2d.setFont(UIFonts.h2(uiScale));
+        int modeWidth = g2d.getFontMetrics().stringWidth(modeText);
+        int modeBaseline = barY + (statusHeight / 2) + (g2d.getFontMetrics().getAscent() / 2) - 2;
+        g2d.drawString(modeText, barX + (barW - modeWidth) / 2, modeBaseline);
+
         g2d.setColor(new Color(224, 230, 255));
         g2d.setFont(UIFonts.message(uiScale));
-        int lineHeight = g2d.getFontMetrics().getHeight() + 2;
-        g2d.drawString(model.getStatusMessage(), 20, 12 + Math.max(lineHeight, statusHeight / 2));
+        int msgBaseline = barY + (statusHeight / 2) + (g2d.getFontMetrics().getAscent() / 2) - 2;
+        g2d.drawString(model.getStatusMessage(), 20, msgBaseline);
     }
 
     private void drawToast(Graphics2D g2d) {

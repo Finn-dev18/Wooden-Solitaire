@@ -19,10 +19,10 @@ public class UIPanelLeftPowerups extends JPanel {
     private static final int BASE_PADDING = 16;
     private static final int BASE_BUTTON_WIDTH = 260;
     private static final int BASE_BUTTON_HEIGHT = 72;
-    private static final int BASE_ICON_SIZE = 16;
+    private static final int BASE_ICON_SIZE = 40;
     private static final int BASE_CONTENT_PADDING = 18;
     private static final int BASE_CHARGES_AREA_WIDTH = 80;
-    private static final int BASE_ICON_AREA_WIDTH = 34;
+    private static final int BASE_ICON_AREA_WIDTH = 56;
 
     private final AssetManager assets;
     private final GameModel model;
@@ -328,17 +328,17 @@ public class UIPanelLeftPowerups extends JPanel {
     private String getIconName(PowerupType type) {
         switch (type) {
             case UNDO:
-                return "icon_hint_16.png";
+                return "icon_undo_64.png";
+            case MOVE:
+                return "icon_move_64.png";
             case BOMB:
-                return "icon_bomb_16.png";
-            case SWAP:
-                return "icon_swap_16.png";
-            case BRIDGEJUMP:
-                return "icon_laser_16.png";
+                return "icon_bomb_64.png";
+            case BRIDGE:
+                return "icon_bridge_64.png";
             case RANDSTURM:
-                return "icon_freeze_16.png";
+                return "icon_randsturm_64.png";
             default:
-                return "icon_swap_16.png";
+                return "icon_move_64.png";
         }
     }
 }

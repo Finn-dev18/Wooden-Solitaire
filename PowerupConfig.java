@@ -69,15 +69,15 @@ public class PowerupConfig {
             prices.put(type, 40);
         }
         perRunCaps.put(PowerupType.UNDO, 2);
-        perRunCaps.put(PowerupType.SWAP, 2);
+        perRunCaps.put(PowerupType.MOVE, 2);
         perRunCaps.put(PowerupType.BOMB, 2);
-        perRunCaps.put(PowerupType.BRIDGEJUMP, 1);
+        perRunCaps.put(PowerupType.BRIDGE, 1);
         perRunCaps.put(PowerupType.RANDSTURM, 1);
 
         prices.put(PowerupType.UNDO, 20);
-        prices.put(PowerupType.SWAP, 40);
+        prices.put(PowerupType.MOVE, 40);
         prices.put(PowerupType.BOMB, 55);
-        prices.put(PowerupType.BRIDGEJUMP, 65);
+        prices.put(PowerupType.BRIDGE, 65);
         prices.put(PowerupType.RANDSTURM, 80);
 
         return new PowerupConfig(

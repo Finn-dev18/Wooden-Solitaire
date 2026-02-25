@@ -188,13 +188,13 @@ public class GameModel {
         int current = charges.getOrDefault(type, 0);
         int capThisRun = powerupConfig.getPerRunCap(type);
         if (current >= capThisRun) {
-            statusMessage = "Cap erreicht: " + type.getLabel();
-            showToast("Cap erreicht");
+            statusMessage = "Max pro Runde erreicht: " + type.getLabel();
+            showToast("Max pro Runde erreicht");
             return false;
         }
         if (current >= powerupConfig.getInventoryCap()) {
-            statusMessage = "Inventar-Limit erreicht.";
-            showToast("Cap erreicht");
+            statusMessage = "Inventar voll.";
+            showToast("Inventar voll");
             return false;
         }
 
@@ -285,10 +285,10 @@ public class GameModel {
             case BOMB:
                 applyBomb(r, c);
                 break;
-            case SWAP:
-                applySwap(r, c);
+            case MOVE:
+                applyMovePowerup(r, c);
                 break;
-            case BRIDGEJUMP:
+            case BRIDGE:
                 applyBridgeJump(r, c);
                 break;
             default:
@@ -310,36 +310,47 @@ public class GameModel {
         updateGameOver();
     }
 
-    private void applySwap(int r, int c) {
+    private void applyMovePowerup(int r, int c) {
         if (!isValidCell(r, c)) {
-            statusMessage = "SWAP: Ungültiges Feld.";
+            statusMessage = "MOVE: Ungültiges Feld.";
             return;
         }
         if (selectionRow < 0) {
+            if (!hasPeg(r, c)) {
+                statusMessage = "MOVE: Start muss eine Kugel sein.";
+                return;
+            }
             selectionRow = r;
             selectionCol = c;
-            statusMessage = "SWAP: Zweites Feld wählen.";
+            statusMessage = "MOVE: Ziel (leeres Feld) wählen.";
             return;
         }
 
-        if (!isValidCell(selectionRow, selectionCol)) {
+        int fr = selectionRow;
+        int fc = selectionCol;
+        if (!hasPeg(fr, fc)) {
             selectionRow = -1;
             selectionCol = -1;
-            statusMessage = "SWAP abgebrochen.";
+            statusMessage = "MOVE: Start ungültig.";
+            return;
+        }
+        if (!isEmpty(r, c)) {
+            statusMessage = "MOVE: Ziel muss leer sein.";
             return;
         }
 
         pushSnapshot();
-        char first = board.get(selectionRow, selectionCol);
-        char second = board.get(r, c);
-        board.set(selectionRow, selectionCol, second);
-        board.set(r, c, first);
+        board.set(fr, fc, '○');
+        board.set(r, c, '●');
         selectionRow = -1;
         selectionCol = -1;
-        consumeCharge(PowerupType.SWAP);
+        consumeCharge(PowerupType.MOVE);
         activePowerup = null;
-        statusMessage = "Swap ausgeführt.";
-        showToast("Powerup: SWAP");
+        selectedRow = -1;
+        selectedCol = -1;
+        clearValidTargets();
+        statusMessage = "Move ausgeführt.";
+        showToast("Powerup: MOVE");
         updateGameOver();
     }
 
@@ -387,7 +398,7 @@ public class GameModel {
         board.set(r, c, '●');
         selectionRow = -1;
         selectionCol = -1;
-        consumeCharge(PowerupType.BRIDGEJUMP);
+        consumeCharge(PowerupType.BRIDGE);
         activePowerup = null;
         statusMessage = "Bridge Jump ausgeführt.";
         showToast("Powerup: BRIDGE JUMP");
