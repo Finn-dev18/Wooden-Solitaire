@@ -4,5 +4,5 @@ public enum OverlayState {
     NONE,
     MENU,
     GAME_OVER,
-    INFO_PAGE
+    INFO_SHEET
 }

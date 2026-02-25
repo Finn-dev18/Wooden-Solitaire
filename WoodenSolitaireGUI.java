@@ -86,7 +86,12 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
                 "icon_bridge_64.png",
                 "icon_randsturm_64.png",
                 "icon_question_32.png",
-                "icon_info_32.png");
+                "icon_info_32.png",
+                "ui_info_panel_1240x760.png",
+                "ui_info_box_560x520.png",
+                "ui_info_close_button_normal_360x88.png",
+                "ui_info_close_button_hover_360x88.png",
+                "ui_info_close_button_pressed_360x88.png");
 
         add(leftPanel, BorderLayout.WEST);
         add(centerWrapper, BorderLayout.CENTER);
@@ -225,7 +230,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (overlayPanel.getOverlayState() == OverlayState.NONE) {
-                    overlayPanel.setOverlayState(OverlayState.INFO_PAGE);
+                    overlayPanel.setOverlayState(OverlayState.INFO_SHEET);
                 }
             }
         });
@@ -239,7 +244,7 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         OverlayState currentState = overlayPanel.getOverlayState();
         if (currentState == OverlayState.NONE) {
             overlayPanel.setOverlayState(OverlayState.MENU);
-        } else if (currentState == OverlayState.MENU || currentState == OverlayState.INFO_PAGE) {
+        } else if (currentState == OverlayState.MENU || currentState == OverlayState.INFO_SHEET) {
             overlayPanel.setOverlayState(OverlayState.NONE);
         }
     }
