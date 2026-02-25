@@ -5,16 +5,16 @@
   "inventoryCap": 5,
   "perRunCaps": {
     "UNDO": 2,
-    "SWAP": 2,
+    "MOVE": 2,
     "BOMB": 2,
-    "BRIDGEJUMP": 1,
+    "BRIDGE": 1,
     "RANDSTURM": 1
   },
   "prices": {
     "UNDO": 20,
-    "SWAP": 40,
+    "MOVE": 40,
     "BOMB": 55,
-    "BRIDGEJUMP": 65,
+    "BRIDGE": 65,
     "RANDSTURM": 80
   }
 }

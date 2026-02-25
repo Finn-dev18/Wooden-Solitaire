@@ -80,11 +80,11 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
                 "menu_button_normal_240x64.png",
                 "menu_button_hover_240x64.png",
                 "menu_button_pressed_240x64.png",
-                "icon_bomb_16.png",
-                "icon_swap_16.png",
-                "icon_hint_16.png",
-                "icon_laser_16.png",
-                "icon_freeze_16.png");
+                "icon_undo_64.png",
+                "icon_move_64.png",
+                "icon_bomb_64.png",
+                "icon_bridge_64.png",
+                "icon_randsturm_64.png");
 
         add(leftPanel, BorderLayout.WEST);
         add(centerWrapper, BorderLayout.CENTER);
@@ -210,9 +210,9 @@ public class WoodenSolitaireGUI extends JFrame implements GameUIController {
         });
 
         registerPowerupHotkey(root, KeyEvent.VK_1, PowerupType.UNDO);
-        registerPowerupHotkey(root, KeyEvent.VK_2, PowerupType.SWAP);
+        registerPowerupHotkey(root, KeyEvent.VK_2, PowerupType.MOVE);
         registerPowerupHotkey(root, KeyEvent.VK_3, PowerupType.BOMB);
-        registerPowerupHotkey(root, KeyEvent.VK_4, PowerupType.BRIDGEJUMP);
+        registerPowerupHotkey(root, KeyEvent.VK_4, PowerupType.BRIDGE);
         registerPowerupHotkey(root, KeyEvent.VK_5, PowerupType.RANDSTURM);
     }
 
