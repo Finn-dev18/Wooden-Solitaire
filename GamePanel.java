@@ -9,7 +9,6 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.event.MouseAdapter;
-import java.io.File;
 import java.awt.event.MouseEvent;
 
 public class GamePanel extends JPanel {
@@ -21,7 +20,7 @@ public class GamePanel extends JPanel {
     private static final int DEFAULT_TOP_UI_MARGIN = 96;
     private static final int DEFAULT_CENTER_MARGIN = 24;
     private static final int INFO_ICON_BASE_SIZE = 32;
-    private static final int INFO_ICON_MARGIN = 16;
+    private static final int INFO_ICON_MARGIN = 14;
 
     private final AssetManager assets;
     private final GameModel model;
@@ -101,7 +100,7 @@ public class GamePanel extends JPanel {
 
     private void handleClick(int x, int y) {
         if (infoIconRect != null && infoIconRect.contains(x, y)) {
-            controller.setOverlayState(OverlayState.INFO_PAGE);
+            controller.setOverlayState(OverlayState.INFO_SHEET);
             controller.onModelUpdated();
             return;
         }
@@ -228,11 +227,7 @@ public class GamePanel extends JPanel {
         int y = getHeight() - iconSize - margin;
         infoIconRect = new Rectangle(x, y, iconSize, iconSize);
 
-        g2d.setColor(new Color(12, 9, 48, 220));
-        g2d.fillRect(infoIconRect.x - 4, infoIconRect.y - 4, infoIconRect.width + 8, infoIconRect.height + 8);
-
-        String iconName = new File("assets", "icon_question_32.png").exists() ? "icon_question_32.png" : "icon_info_32.png";
-        BufferedImage infoIcon = assets.getImage(iconName);
+        BufferedImage infoIcon = assets.getImage("icon_question_32.png");
         g2d.drawImage(infoIcon, infoIconRect.x, infoIconRect.y, infoIconRect.width, infoIconRect.height, null);
     }
 

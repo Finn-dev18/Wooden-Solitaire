@@ -1,6 +1,8 @@
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -10,6 +12,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -20,6 +23,8 @@ public class OverlayPanel extends JPanel {
     private static final Color COLOR_TEXT_MUTED = new Color(224, 230, 255);
     private static final Color COLOR_TEXT_DARK = new Color(245, 241, 235);
     private static final Color COLOR_TEXT_INPUT = new Color(245, 241, 235);
+    private static final Color COLOR_CYAN = new Color(43, 253, 223);
+
     private static final int MAX_NAME_LENGTH = 12;
     private static final int PANEL_PADDING_PX = 48;
     private static final int HEADER_HEIGHT_PX = 96;
@@ -43,42 +48,6 @@ public class OverlayPanel extends JPanel {
     private boolean cursorOn = true;
     private Timer cursorTimer;
     private boolean top10Candidate;
-    private int infoPageIndex;
-    private static final List<List<String>> INFO_PAGES = Arrays.asList(
-            Arrays.asList(
-                    "A) Spielregeln",
-                    "- Ziel: so wenig Pegs wie möglich (ideal 1)",
-                    "- Standardzug: über 1 Kugel springen; sie verschwindet",
-                    "- Gültige Züge: nur horizontal/vertikal",
-                    "- Kein Diagonalzug, keine Ketten in einem Klick",
-                    "",
-                    "B) Wertung",
-                    "- Weniger Pegs = besser",
-                    "- Kürzere Zeit und weniger Züge geben mehr Punkte",
-                    "- Für Top-10 zählt der erreichte Score"
-            ),
-            Arrays.asList(
-                    "C) Credits & Powerups",
-                    "- Credits gibt es für gültige Standardzüge",
-                    "- Powerups kosten Credits und haben Runden-Limits",
-                    "- UNDO: macht den letzten Schritt rückgängig",
-                    "- MOVE: versetzt eine Kugel auf ein leeres Feld",
-                    "- BOMB: entfernt eine Kugel",
-                    "- BRIDGE: Sprungdistanz 3, entfernt 2 Zwischenkugeln",
-                    "- RANDSTURM: schiebt Kugeln zufällig zu einer Wand"
-            ),
-            Arrays.asList(
-                    "D) Steuerung & Tipps",
-                    "- Maus: auswählen/ziehen je nach Modus",
-                    "- Hotkeys 1..5: Powerup benutzen (nicht kaufen)",
-                    "- ? / i: Info öffnen",
-                    "- ESC: Overlay schließen",
-                    "",
-                    "Tipps:",
-                    "- Erst die Mitte freispielen, Ränder spät räumen",
-                    "- Züge mit mehreren Folgeoptionen bevorzugen"
-            )
-    );
 
     public OverlayPanel(AssetManager assets, GameModel model, WoodenSolitaireGUI controller) {
         this.assets = assets;
@@ -92,9 +61,6 @@ public class OverlayPanel extends JPanel {
 
     public void setOverlayState(OverlayState state) {
         this.state = state;
-        if (state == OverlayState.INFO_PAGE) {
-            infoPageIndex = 0;
-        }
         if (state == OverlayState.PRE_GAME_NAME) {
             nameInput = "";
             nameInputFocused = true;
@@ -249,16 +215,6 @@ public class OverlayPanel extends JPanel {
             case MENU:
                 controller.setOverlayState(OverlayState.MENU);
                 break;
-            case PREV:
-                if (infoPageIndex > 0) {
-                    infoPageIndex--;
-                }
-                break;
-            case NEXT:
-                if (infoPageIndex < INFO_PAGES.size() - 1) {
-                    infoPageIndex++;
-                }
-                break;
             case CLOSE:
                 controller.setOverlayState(OverlayState.NONE);
                 break;
@@ -330,7 +286,11 @@ public class OverlayPanel extends JPanel {
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         drawDimLayer(g2d);
-        drawPanelAndContents(g2d);
+        if (state == OverlayState.INFO_SHEET) {
+            drawInfoSheet(g2d);
+        } else {
+            drawPanelAndContents(g2d);
+        }
 
         g2d.dispose();
     }
@@ -345,8 +305,8 @@ public class OverlayPanel extends JPanel {
         nameInputRect = null;
 
         BufferedImage panelImage = assets.getImage(getPanelAsset());
-        int panelWidth = (int) Math.round(panelImage.getWidth() * controller.getScale());
-        int panelHeight = (int) Math.round(panelImage.getHeight() * controller.getScale());
+        int panelWidth = panelImage.getWidth() * controller.getScale();
+        int panelHeight = panelImage.getHeight() * controller.getScale();
         int panelX = (getWidth() - panelWidth) / 2;
         int panelY = (getHeight() - panelHeight) / 2;
         Rectangle panelRect = new Rectangle(panelX, panelY, panelWidth, panelHeight);
@@ -363,8 +323,8 @@ public class OverlayPanel extends JPanel {
 
     private Layout buildLayout(Rectangle panelRect) {
         int scale = controller.getScale();
-        int panelPadding = (int) Math.round(PANEL_PADDING_PX * scale);
-        int headerHeight = (int) Math.round(HEADER_HEIGHT_PX * scale);
+        int panelPadding = PANEL_PADDING_PX * scale;
+        int headerHeight = HEADER_HEIGHT_PX * scale;
 
         int contentX = panelRect.x + panelPadding;
         int contentWidth = panelRect.width - panelPadding * 2;
@@ -401,8 +361,6 @@ public class OverlayPanel extends JPanel {
             drawMenu(g2d, layout);
         } else if (state == OverlayState.GAME_OVER) {
             drawGameOver(g2d, layout);
-        } else if (state == OverlayState.INFO_PAGE) {
-            drawInfoPage(g2d, layout);
         }
     }
 
@@ -419,75 +377,79 @@ public class OverlayPanel extends JPanel {
         if (state == OverlayState.GAME_OVER) {
             return "GAME OVER";
         }
-        if (state == OverlayState.INFO_PAGE) {
-            return "INFO";
-        }
         return "";
     }
 
     private void drawModeSelect(Graphics2D g2d, Layout layout) {
-        int rowStartY = layout.contentRect.y + Math.max(0, (layout.contentRect.height - (2 * (int) Math.round(BUTTON_HEIGHT_PX * controller.getScale()) - (int) Math.round(BUTTON_GAP_PX * controller.getScale()))) / 2);
+        int buttonHeight = BUTTON_HEIGHT_PX * controller.getScale();
+        int gap = BUTTON_GAP_PX * controller.getScale();
+        int totalHeight = (buttonHeight * 2) + gap;
+        int rowStartY = layout.contentRect.y + Math.max(0, (layout.contentRect.height - totalHeight) / 2);
         drawButtonRow(g2d, layout.panelRect, rowStartY, OverlayButton.CLASSIC_MODE, OverlayButton.POWERUPS_MODE);
         for (OverlayButton button : new OverlayButton[]{OverlayButton.CLASSIC_MODE, OverlayButton.POWERUPS_MODE}) {
             Rectangle rect = buttonRects.get(button);
-            if (rect != null) {
+            if (rect != null && button.getSubLabel() != null) {
                 g2d.setFont(UIFonts.small(controller.getScale()));
                 g2d.setColor(COLOR_TEXT_MUTED);
-                drawCenteredTextAtBaseline(g2d, button.getSubLabel(), rect.x + rect.width / 2, rect.y + rect.height - (int) Math.round(10 * controller.getScale()));
+                drawCenteredTextAtBaseline(g2d, button.getSubLabel(), rect.x + rect.width / 2, rect.y + rect.height - (10 * controller.getScale()));
             }
         }
     }
 
     private void drawPreGame(Graphics2D g2d, Layout layout) {
-        int buttonY = layout.contentRect.y + layout.contentRect.height - (int) Math.round(BUTTON_HEIGHT_PX * controller.getScale());
-        int inputImageHeight = (int) Math.round(104 * controller.getScale());
-        int gap = (int) Math.round(INPUT_TO_BUTTON_GAP_PX * controller.getScale());
-        int inputY = layout.contentRect.y + Math.max(0, (buttonY - gap - inputImageHeight - layout.contentRect.y) / 2);
+        int scale = controller.getScale();
+        int buttonWidth = MENU_BUTTON_WIDTH_PX * scale;
+        int buttonHeight = BUTTON_HEIGHT_PX * scale;
+        int inputWidth = 560 * scale;
+        int inputHeight = 104 * scale;
 
-        drawNameInput(g2d, layout.panelRect, inputY);
-        drawButtonRow(g2d, layout.panelRect, buttonY, OverlayButton.START, OverlayButton.QUIT);
+        int totalHeight = inputHeight + INPUT_TO_BUTTON_GAP_PX * scale + buttonHeight;
+        int startY = layout.contentRect.y + (layout.contentRect.height - totalHeight) / 2;
+        int inputX = layout.panelRect.x + (layout.panelRect.width - inputWidth) / 2;
+        int inputY = startY;
+
+        nameInputRect = new Rectangle(inputX, inputY, inputWidth, inputHeight);
+        drawNameInput(g2d, nameInputRect);
+
+        int buttonX = layout.panelRect.x + (layout.panelRect.width - buttonWidth) / 2;
+        int buttonY = inputY + inputHeight + INPUT_TO_BUTTON_GAP_PX * scale;
+        Rectangle startRect = new Rectangle(buttonX, buttonY, buttonWidth, buttonHeight);
+        buttonRects.put(OverlayButton.START, startRect);
+        drawButton(g2d, startRect, OverlayButton.START);
     }
 
     private void drawMenu(Graphics2D g2d, Layout layout) {
-        drawCenteredButtonColumn(g2d, layout.contentRect, new OverlayButton[]{
-                OverlayButton.RESUME,
-                OverlayButton.NEW_GAME,
-                OverlayButton.QUIT
-        });
+        drawCenteredButtonColumn(g2d, layout.contentRect, new OverlayButton[]{OverlayButton.RESUME, OverlayButton.NEW_GAME, OverlayButton.QUIT});
     }
 
     private void drawGameOver(Graphics2D g2d, Layout layout) {
-        int buttonY = layout.contentRect.y + layout.contentRect.height - (int) Math.round(BUTTON_HEIGHT_PX * controller.getScale());
-
-        g2d.setFont(UIFonts.body(controller.getScale()));
+        int scale = controller.getScale();
         g2d.setColor(COLOR_TEXT_MUTED);
-        int score = ScoreCalculator.calculate(model.getElapsedDuration(), model.getPegsLeft(), model.getMovesCount());
-        String[] lines = new String[]{
+        g2d.setFont(UIFonts.body(scale));
+
+        String[] lines = {
+                "Player: " + model.getPlayerName(),
+                "Pegs Left: " + model.getPegsLeft(),
                 "Moves: " + model.getMovesCount(),
-                "Pegs: " + model.getPegsLeft(),
-                "Score: " + score
+                "Time: " + model.getElapsedDuration().toSeconds() + "s"
         };
-        int lineSpacing = g2d.getFontMetrics().getHeight() + (int) Math.round(8 * controller.getScale());
+
+        int lineSpacing = g2d.getFontMetrics().getHeight() + (8 * scale);
         int statsHeight = lineSpacing * (lines.length - 1) + g2d.getFontMetrics().getAscent();
-        int availableTop = layout.contentRect.y;
-        int availableBottom = buttonY - (int) Math.round(28 * controller.getScale());
-        int blockCenterY = availableTop + Math.max(0, (availableBottom - availableTop) / 2);
+        int blockCenterY = layout.contentRect.y + (layout.contentRect.height / 2) - (40 * scale);
         int firstBaselineY = blockCenterY - statsHeight / 2 + g2d.getFontMetrics().getAscent();
+
         for (int i = 0; i < lines.length; i++) {
-            int baselineY = firstBaselineY + i * lineSpacing;
-            drawCenteredTextAtBaseline(g2d, lines[i], layout.contentRect.x + layout.contentRect.width / 2, baselineY);
+            drawCenteredTextAtBaseline(g2d, lines[i], layout.panelRect.x + layout.panelRect.width / 2, firstBaselineY + i * lineSpacing);
         }
 
+        int buttonY = layout.panelRect.y + layout.panelRect.height - (BUTTON_HEIGHT_PX * scale) - (PANEL_PADDING_PX * scale);
         drawButtonRow(g2d, layout.panelRect, buttonY, OverlayButton.RESTART, OverlayButton.MENU);
     }
 
-    private void drawNameInput(Graphics2D g2d, Rectangle panelRect, int inputY) {
+    private void drawNameInput(Graphics2D g2d, Rectangle rect) {
         BufferedImage inputImage = assets.getImage(nameInputFocused ? "ui_name_input_focus_560x104.png" : "ui_name_input_560x104.png");
-        int inputWidth = (int) Math.round(inputImage.getWidth() * controller.getScale());
-        int inputHeight = (int) Math.round(inputImage.getHeight() * controller.getScale());
-        int inputX = panelRect.x + (panelRect.width - inputWidth) / 2;
-        nameInputRect = new Rectangle(inputX, inputY, inputWidth, inputHeight);
-        g2d.drawImage(inputImage, inputX, inputY, inputWidth, inputHeight, null);
+        g2d.drawImage(inputImage, rect.x, rect.y, rect.width, rect.height, null);
 
         String text = nameInput == null ? "" : nameInput;
         String visibleText = text;
@@ -496,67 +458,202 @@ public class OverlayPanel extends JPanel {
         }
         g2d.setFont(UIFonts.h2(controller.getScale()));
         g2d.setColor(COLOR_TEXT_INPUT);
-        java.awt.FontMetrics fm = g2d.getFontMetrics();
+        FontMetrics fm = g2d.getFontMetrics();
         int scale = controller.getScale();
-        int textX = inputX + (int) Math.round(24 * scale);
-        int padY = (int) Math.round(16 * scale);
-        int innerY = inputY + padY;
-        int innerH = inputHeight - padY * 2;
+        int textX = rect.x + (24 * scale);
+        int padY = (16 * scale);
+        int innerY = rect.y + padY;
+        int innerH = rect.height - padY * 2;
         int baselineY = innerY + (innerH - fm.getHeight()) / 2 + fm.getAscent();
-        baselineY += (int) Math.round(6 * scale);
+        baselineY += (6 * scale);
         g2d.drawString(visibleText, textX, baselineY);
 
         Rectangle tabRect = new Rectangle(
-                inputX + (int) Math.round(18 * scale),
-                inputY + (int) Math.round(6 * scale),
-                (int) Math.round(104 * scale),
-                (int) Math.round(30 * scale));
+                rect.x + (18 * scale),
+                rect.y + (6 * scale),
+                104 * scale,
+                30 * scale);
 
         g2d.setFont(UIFonts.small(scale));
         g2d.setColor(COLOR_TEXT_DARK);
         drawCenteredText(g2d, "NAME", tabRect);
     }
 
+    private void drawInfoSheet(Graphics2D g2d) {
+        buttonRects.clear();
+        nameInputRect = null;
 
-    private void drawInfoPage(Graphics2D g2d, Layout layout) {
         int scale = controller.getScale();
-        g2d.setFont(UIFonts.body(scale));
+        int panelW = 1240 * scale;
+        int panelH = 760 * scale;
+        int panelX = (getWidth() - panelW) / 2;
+        int panelY = (getHeight() - panelH) / 2;
+        Rectangle panelRect = new Rectangle(panelX, panelY, panelW, panelH);
+
+        g2d.drawImage(assets.getImage("ui_info_panel_1240x760.png"), panelX, panelY, panelW, panelH, null);
+
+        Font h1 = UIFonts.h1(scale).deriveFont(Font.BOLD, 28f * scale);
+        g2d.setFont(h1);
+        g2d.setColor(COLOR_TEXT);
+        Rectangle headerRect = new Rectangle(panelX + (260 * scale), panelY + (42 * scale), panelW - (520 * scale), 96 * scale);
+        drawCenteredText(g2d, "INFO", headerRect);
+
+        int iconSize = 32 * scale;
+        g2d.drawImage(assets.getImage("icon_question_32.png"), panelX + (90 * scale), panelY + (78 * scale), iconSize, iconSize, null);
+
+        int innerTop = panelY + (190 * scale);
+        int leftX = panelX + (90 * scale);
+        int rightX = panelX + (590 * scale);
+        int boxW = 560 * scale;
+        int boxH = 520 * scale;
+
+        Rectangle leftBox = new Rectangle(leftX, innerTop, boxW, boxH);
+        Rectangle rightBox = new Rectangle(rightX, innerTop, boxW, boxH);
+        g2d.drawImage(assets.getImage("ui_info_box_560x520.png"), leftBox.x, leftBox.y, leftBox.width, leftBox.height, null);
+        g2d.drawImage(assets.getImage("ui_info_box_560x520.png"), rightBox.x, rightBox.y, rightBox.width, rightBox.height, null);
+
+        drawInfoLeftContent(g2d, leftBox, scale);
+        drawInfoRightContent(g2d, rightBox, scale);
+
+        int buttonW = 360 * scale;
+        int buttonH = 88 * scale;
+        int buttonX = panelX + (panelW - buttonW) / 2;
+        int buttonY = panelY + panelH - (120 * scale);
+        Rectangle closeRect = new Rectangle(buttonX, buttonY, buttonW, buttonH);
+        buttonRects.put(OverlayButton.CLOSE, closeRect);
+        drawButton(g2d, closeRect, OverlayButton.CLOSE);
+    }
+
+    private void drawInfoLeftContent(Graphics2D g2d, Rectangle box, int scale) {
+        int padding = 22 * scale;
+        int x = box.x + padding;
+        int maxWidth = box.width - (padding * 2);
+        int y = box.y + padding;
+
+        Font sectionFont = UIFonts.h2(scale).deriveFont(Font.BOLD, 20f * scale);
+        Font bodyFont = UIFonts.body(scale).deriveFont(Font.PLAIN, 14f * scale);
+
+        y = drawSection(g2d, x, y, maxWidth, sectionFont, bodyFont, "A) SPIELREGELN", Arrays.asList(
+                "• Ziel: Am Ende so wenige Kugeln wie möglich (ideal: 1).",
+                "• Standardzug: Springe über genau 1 Kugel in ein leeres Feld.",
+                "• Die übersprungene Kugel wird entfernt.",
+                "• Züge sind nur horizontal/vertikal gültig."), scale);
+
+        y = drawSection(g2d, x, y + (8 * scale), maxWidth, sectionFont, bodyFont, "B) CREDITS & SHOP", Arrays.asList(
+                "• Credits gibt es für gültige Standardzüge.",
+                "• Powerups kauft man mit Credits (Runden-Limits beachten)."), scale);
+
+        drawSection(g2d, x, y + (8 * scale), maxWidth, sectionFont, bodyFont, "D) STEUERUNG", Arrays.asList(
+                "• Maus: Felder anklicken (Start → Ziel).",
+                "• Hotkeys 1–5: gekauftes Powerup benutzen.",
+                "• ? unten links: Info öffnen.",
+                "• ESC: Overlay schließen."), scale);
+    }
+
+    private void drawInfoRightContent(Graphics2D g2d, Rectangle box, int scale) {
+        int padding = 22 * scale;
+        int x = box.x + padding;
+        int maxWidth = box.width - (padding * 2);
+        int y = box.y + padding;
+
+        Font sectionFont = UIFonts.h2(scale).deriveFont(Font.BOLD, 20f * scale);
+        Font bodyFont = UIFonts.body(scale).deriveFont(Font.PLAIN, 14f * scale);
+        Font powerupNameFont = UIFonts.h2(scale).deriveFont(Font.BOLD, 18f * scale);
+
+        y = drawSection(g2d, x, y, maxWidth, sectionFont, bodyFont, "B) CREDITS & SHOP", Arrays.asList(
+                "• Credits sind gespeichert (zwischen Runden)."), scale);
+
+        g2d.setFont(sectionFont);
+        g2d.setColor(COLOR_TEXT);
+        int titleBaseline = y + g2d.getFontMetrics().getAscent() + (10 * scale);
+        g2d.drawString("C) POWERUPS", x, titleBaseline);
+        y = titleBaseline + (14 * scale);
+
+        PowerupRow[] rows = {
+                new PowerupRow("icon_undo_64.png", "UNDO", "macht den letzten Schritt rückgängig."),
+                new PowerupRow("icon_move_64.png", "MOVE", "versetzt eine Kugel auf ein leeres Feld."),
+                new PowerupRow("icon_bomb_64.png", "BOMB", "entfernt eine Kugel."),
+                new PowerupRow("icon_bridge_64.png", "BRIDGE", "Sprung Distanz 3, entfernt 2 Zwischenkugeln."),
+                new PowerupRow("icon_randsturm_64.png", "RANDSTURM", "schiebt alle Kugeln zufällig zu einer Wand.")
+        };
+
+        int rowHeight = 64 * scale;
+        int iconSize = 40 * scale;
+        for (PowerupRow row : rows) {
+            int rowTop = y;
+            int iconX = x;
+            int iconY = rowTop + (rowHeight - iconSize) / 2;
+            g2d.drawImage(assets.getImage(row.icon), iconX, iconY, iconSize, iconSize, null);
+
+            int textX = x + iconSize + (14 * scale);
+            g2d.setFont(powerupNameFont);
+            g2d.setColor(COLOR_CYAN);
+            int nameBaseline = rowTop + g2d.getFontMetrics().getAscent() + (4 * scale);
+            g2d.drawString(row.name + ":", textX, nameBaseline);
+
+            g2d.setFont(bodyFont);
+            g2d.setColor(COLOR_TEXT_MUTED);
+            int descMaxWidth = maxWidth - (iconSize + (14 * scale));
+            String desc = fitWithEllipsis(row.description, g2d.getFontMetrics(), descMaxWidth);
+            int descBaseline = nameBaseline + g2d.getFontMetrics().getHeight() - (2 * scale);
+            g2d.drawString(desc, textX, descBaseline);
+
+            y += rowHeight;
+        }
+    }
+
+    private int drawSection(Graphics2D g2d, int x, int y, int maxWidth, Font sectionFont, Font bodyFont, String title,
+                            List<String> lines, int scale) {
+        g2d.setFont(sectionFont);
+        g2d.setColor(COLOR_TEXT);
+        int sectionBaseline = y + g2d.getFontMetrics().getAscent();
+        g2d.drawString(title, x, sectionBaseline);
+
+        y = sectionBaseline + (8 * scale);
+        g2d.setFont(bodyFont);
         g2d.setColor(COLOR_TEXT_MUTED);
-
-        infoPageIndex = Math.max(0, Math.min(infoPageIndex, INFO_PAGES.size() - 1));
-        List<String> lines = INFO_PAGES.get(infoPageIndex);
-
-        int lineHeight = g2d.getFontMetrics().getHeight() + Math.max(2, (int) Math.round(2 * scale));
-        int textX = layout.contentRect.x;
-        int textY = layout.contentRect.y + lineHeight;
-
-        int buttonHeight = (int) Math.round(BUTTON_HEIGHT_PX * scale);
-        int buttonY = layout.contentRect.y + layout.contentRect.height - buttonHeight;
-        int maxTextBottom = buttonY - lineHeight;
-
+        int lineHeight = g2d.getFontMetrics().getHeight() + (2 * scale);
         for (String line : lines) {
-            if (textY > maxTextBottom) {
-                break;
+            for (String wrapped : wrapText(line, g2d.getFontMetrics(), maxWidth)) {
+                y += lineHeight;
+                g2d.drawString(wrapped, x, y);
             }
-            g2d.drawString(line, textX, textY);
-            textY += lineHeight;
+        }
+        return y + (8 * scale);
+    }
+
+    private List<String> wrapText(String text, FontMetrics fm, int maxWidth) {
+        List<String> lines = new ArrayList<>();
+        if (text == null || text.isEmpty()) {
+            lines.add("");
+            return lines;
         }
 
-        g2d.setFont(UIFonts.small(scale));
-        g2d.setColor(COLOR_TEXT);
-        String pageText = (infoPageIndex + 1) + "/" + INFO_PAGES.size();
-        int pageTextWidth = g2d.getFontMetrics().stringWidth(pageText);
-        int pageTextX = layout.headerRect.x + layout.headerRect.width - pageTextWidth - (int) Math.round(12 * scale);
-        int pageTextY = layout.headerRect.y + g2d.getFontMetrics().getAscent() + (int) Math.round(8 * scale);
-        g2d.drawString(pageText, pageTextX, pageTextY);
-
-        drawButtonRow(g2d, layout.panelRect, buttonY, OverlayButton.PREV, OverlayButton.NEXT, OverlayButton.CLOSE);
+        String[] words = text.split("\\s+");
+        StringBuilder line = new StringBuilder();
+        for (String word : words) {
+            String candidate = line.length() == 0 ? word : line + " " + word;
+            if (fm.stringWidth(candidate) <= maxWidth) {
+                line.setLength(0);
+                line.append(candidate);
+            } else {
+                if (line.length() > 0) {
+                    lines.add(line.toString());
+                }
+                line.setLength(0);
+                line.append(word);
+            }
+        }
+        if (line.length() > 0) {
+            lines.add(line.toString());
+        }
+        return lines;
     }
 
     private void drawButtonRow(Graphics2D g2d, Rectangle panelRect, int y, OverlayButton... buttons) {
-        int buttonWidth = (int) Math.round(ROW_BUTTON_WIDTH_PX * controller.getScale());
-        int buttonHeight = (int) Math.round(BUTTON_HEIGHT_PX * controller.getScale());
-        int gap = (int) Math.round(BUTTON_GAP_PX * controller.getScale());
+        int buttonWidth = ROW_BUTTON_WIDTH_PX * controller.getScale();
+        int buttonHeight = BUTTON_HEIGHT_PX * controller.getScale();
+        int gap = BUTTON_GAP_PX * controller.getScale();
         int totalWidth = buttonWidth * buttons.length + gap * (buttons.length - 1);
         int startX = panelRect.x + (panelRect.width - totalWidth) / 2;
         for (int i = 0; i < buttons.length; i++) {
@@ -568,9 +665,9 @@ public class OverlayPanel extends JPanel {
     }
 
     private void drawCenteredButtonColumn(Graphics2D g2d, Rectangle contentRect, OverlayButton[] buttons) {
-        int buttonWidth = (int) Math.round(MENU_BUTTON_WIDTH_PX * controller.getScale());
-        int buttonHeight = (int) Math.round(BUTTON_HEIGHT_PX * controller.getScale());
-        int gap = (int) Math.round(BUTTON_GAP_PX * controller.getScale());
+        int buttonWidth = MENU_BUTTON_WIDTH_PX * controller.getScale();
+        int buttonHeight = BUTTON_HEIGHT_PX * controller.getScale();
+        int gap = BUTTON_GAP_PX * controller.getScale();
         int totalHeight = buttonHeight * buttons.length + gap * (buttons.length - 1);
         int startY = contentRect.y + (contentRect.height - totalHeight) / 2;
         int x = contentRect.x + (contentRect.width - buttonWidth) / 2;
@@ -585,7 +682,16 @@ public class OverlayPanel extends JPanel {
     private void drawButton(Graphics2D g2d, Rectangle rect, OverlayButton button) {
         boolean disabled = isButtonDisabled(button);
         BufferedImage image;
-        if (disabled) {
+
+        if (state == OverlayState.INFO_SHEET && button == OverlayButton.CLOSE) {
+            if (pressed == button) {
+                image = assets.getImage("ui_info_close_button_pressed_360x88.png");
+            } else if (hovered == button) {
+                image = assets.getImage("ui_info_close_button_hover_360x88.png");
+            } else {
+                image = assets.getImage("ui_info_close_button_normal_360x88.png");
+            }
+        } else if (disabled) {
             image = assets.getImage("ui_button_disabled_260x72.png");
         } else if (pressed == button) {
             image = assets.getImage("ui_button_pressed_260x72.png");
@@ -594,32 +700,43 @@ public class OverlayPanel extends JPanel {
         } else {
             image = assets.getImage("ui_button_normal_260x72.png");
         }
+
         g2d.drawImage(image, rect.x, rect.y, rect.width, rect.height, null);
 
-        g2d.setFont(UIFonts.h2(controller.getScale()));
-        g2d.setColor(new Color(245, 241, 235));
+        g2d.setFont(state == OverlayState.INFO_SHEET ? UIFonts.h2(controller.getScale()).deriveFont(Font.BOLD, 20f * controller.getScale()) : UIFonts.h2(controller.getScale()));
+        g2d.setColor(COLOR_TEXT);
         String label = button.getLabel();
         int textWidth = g2d.getFontMetrics().stringWidth(label);
         int textX = rect.x + (rect.width - textWidth) / 2;
-        int textY = centeredTextBaseline(g2d, rect.y, rect.height) - (button.hasSubLabel() ? (int) Math.round(9 * controller.getScale()) : 0);
+        int textY = centeredTextBaseline(g2d, rect.y, rect.height) - (button.hasSubLabel() ? (9 * controller.getScale()) : 0);
         g2d.drawString(label, textX, textY);
     }
 
     private boolean isButtonDisabled(OverlayButton button) {
-        if (button == OverlayButton.START) {
-            return !canStart();
+        return button == OverlayButton.START && !canStart();
+    }
+
+    private String fitWithEllipsis(String text, FontMetrics fm, int maxWidth) {
+        if (text == null || text.isEmpty() || fm.stringWidth(text) <= maxWidth) {
+            return text;
         }
-        if (button == OverlayButton.PREV) {
-            return infoPageIndex <= 0;
+        String ellipsis = "…";
+        int low = 0;
+        int high = text.length();
+        while (low < high) {
+            int mid = (low + high + 1) / 2;
+            String candidate = text.substring(0, mid) + ellipsis;
+            if (fm.stringWidth(candidate) <= maxWidth) {
+                low = mid;
+            } else {
+                high = mid - 1;
+            }
         }
-        if (button == OverlayButton.NEXT) {
-            return infoPageIndex >= INFO_PAGES.size() - 1;
-        }
-        return false;
+        return text.substring(0, Math.max(0, low)) + ellipsis;
     }
 
     private int centeredTextBaseline(Graphics2D g2d, int rectY, int rectHeight) {
-        java.awt.FontMetrics metrics = g2d.getFontMetrics();
+        FontMetrics metrics = g2d.getFontMetrics();
         return rectY + (rectHeight - metrics.getHeight()) / 2 + metrics.getAscent();
     }
 
@@ -645,8 +762,6 @@ public class OverlayPanel extends JPanel {
         NEW_GAME("NEW GAME", null),
         MENU("MENU", null),
         RESTART("RESTART", null),
-        PREV("PREV", null),
-        NEXT("NEXT", null),
         CLOSE("CLOSE", null);
 
         private final String label;
@@ -679,6 +794,18 @@ public class OverlayPanel extends JPanel {
             this.panelRect = panelRect;
             this.headerRect = headerRect;
             this.contentRect = contentRect;
+        }
+    }
+
+    private static class PowerupRow {
+        private final String icon;
+        private final String name;
+        private final String description;
+
+        private PowerupRow(String icon, String name, String description) {
+            this.icon = icon;
+            this.name = name;
+            this.description = description;
         }
     }
 }
