@@ -10,7 +10,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 public class OverlayPanel extends JPanel {
@@ -41,6 +43,42 @@ public class OverlayPanel extends JPanel {
     private boolean cursorOn = true;
     private Timer cursorTimer;
     private boolean top10Candidate;
+    private int infoPageIndex;
+    private static final List<List<String>> INFO_PAGES = Arrays.asList(
+            Arrays.asList(
+                    "A) Spielregeln",
+                    "- Ziel: so wenig Pegs wie möglich (ideal 1)",
+                    "- Standardzug: über 1 Kugel springen; sie verschwindet",
+                    "- Gültige Züge: nur horizontal/vertikal",
+                    "- Kein Diagonalzug, keine Ketten in einem Klick",
+                    "",
+                    "B) Wertung",
+                    "- Weniger Pegs = besser",
+                    "- Kürzere Zeit und weniger Züge geben mehr Punkte",
+                    "- Für Top-10 zählt der erreichte Score"
+            ),
+            Arrays.asList(
+                    "C) Credits & Powerups",
+                    "- Credits gibt es für gültige Standardzüge",
+                    "- Powerups kosten Credits und haben Runden-Limits",
+                    "- UNDO: macht den letzten Schritt rückgängig",
+                    "- MOVE: versetzt eine Kugel auf ein leeres Feld",
+                    "- BOMB: entfernt eine Kugel",
+                    "- BRIDGE: Sprungdistanz 3, entfernt 2 Zwischenkugeln",
+                    "- RANDSTURM: schiebt Kugeln zufällig zu einer Wand"
+            ),
+            Arrays.asList(
+                    "D) Steuerung & Tipps",
+                    "- Maus: auswählen/ziehen je nach Modus",
+                    "- Hotkeys 1..5: Powerup benutzen (nicht kaufen)",
+                    "- ? / i: Info öffnen",
+                    "- ESC: Overlay schließen",
+                    "",
+                    "Tipps:",
+                    "- Erst die Mitte freispielen, Ränder spät räumen",
+                    "- Züge mit mehreren Folgeoptionen bevorzugen"
+            )
+    );
 
     public OverlayPanel(AssetManager assets, GameModel model, WoodenSolitaireGUI controller) {
         this.assets = assets;
@@ -54,6 +92,9 @@ public class OverlayPanel extends JPanel {
 
     public void setOverlayState(OverlayState state) {
         this.state = state;
+        if (state == OverlayState.INFO_PAGE) {
+            infoPageIndex = 0;
+        }
         if (state == OverlayState.PRE_GAME_NAME) {
             nameInput = "";
             nameInputFocused = true;
@@ -98,7 +139,7 @@ public class OverlayPanel extends JPanel {
             @Override
             public void mouseReleased(MouseEvent e) {
                 OverlayButton released = findButton(e.getX(), e.getY());
-                if (pressed != null && pressed == released) {
+                if (pressed != null && pressed == released && !isButtonDisabled(pressed)) {
                     handleButtonClick(pressed);
                 }
                 pressed = null;
@@ -207,6 +248,16 @@ public class OverlayPanel extends JPanel {
                 break;
             case MENU:
                 controller.setOverlayState(OverlayState.MENU);
+                break;
+            case PREV:
+                if (infoPageIndex > 0) {
+                    infoPageIndex--;
+                }
+                break;
+            case NEXT:
+                if (infoPageIndex < INFO_PAGES.size() - 1) {
+                    infoPageIndex++;
+                }
                 break;
             case CLOSE:
                 controller.setOverlayState(OverlayState.NONE);
@@ -472,45 +523,34 @@ public class OverlayPanel extends JPanel {
         g2d.setFont(UIFonts.body(scale));
         g2d.setColor(COLOR_TEXT_MUTED);
 
-        String[] lines = new String[]{
-                "A) Spielregeln",
-                "- Ziel: so wenig Pegs wie moeglich (ideal 1)",
-                "- Standardzug: ueber 1 Kugel springen, diese verschwindet",
-                "- Gueltige Zuege nur horizontal/vertikal",
-                "",
-                "B) Credits & Shop",
-                "- Credits gibt es pro gueltigem Standardzug (plus evtl. Bonus)",
-                "- Powerups kauft man mit Credits, pro Runde nur begrenzt (Caps)",
-                "",
-                "C) Powerups",
-                "- UNDO: macht den letzten Schritt rueckgaengig",
-                "- MOVE: versetzt eine Kugel auf ein leeres Feld",
-                "- BOMB: entfernt eine Kugel",
-                "- BRIDGE: Sprungdistanz 3, entfernt 2 Zwischenkugeln",
-                "- RANDSTURM: schiebt alle Kugeln zufaellig zu einer Wand",
-                "",
-                "D) Steuerung",
-                "- Maus: auswaehlen/ziehen je nach Modus",
-                "- Hotkeys 1..5: Powerup benutzen (nicht kaufen)",
-                "- ? / i: Info oeffnen",
-                "- ESC: Overlay schliessen"
-        };
+        infoPageIndex = Math.max(0, Math.min(infoPageIndex, INFO_PAGES.size() - 1));
+        List<String> lines = INFO_PAGES.get(infoPageIndex);
 
         int lineHeight = g2d.getFontMetrics().getHeight() + Math.max(2, (int) Math.round(2 * scale));
         int textX = layout.contentRect.x;
         int textY = layout.contentRect.y + lineHeight;
+
         int buttonHeight = (int) Math.round(BUTTON_HEIGHT_PX * scale);
         int buttonY = layout.contentRect.y + layout.contentRect.height - buttonHeight;
+        int maxTextBottom = buttonY - lineHeight;
 
         for (String line : lines) {
-            if (textY >= buttonY - lineHeight) {
+            if (textY > maxTextBottom) {
                 break;
             }
             g2d.drawString(line, textX, textY);
             textY += lineHeight;
         }
 
-        drawButtonRow(g2d, layout.panelRect, buttonY, OverlayButton.CLOSE);
+        g2d.setFont(UIFonts.small(scale));
+        g2d.setColor(COLOR_TEXT);
+        String pageText = (infoPageIndex + 1) + "/" + INFO_PAGES.size();
+        int pageTextWidth = g2d.getFontMetrics().stringWidth(pageText);
+        int pageTextX = layout.headerRect.x + layout.headerRect.width - pageTextWidth - (int) Math.round(12 * scale);
+        int pageTextY = layout.headerRect.y + g2d.getFontMetrics().getAscent() + (int) Math.round(8 * scale);
+        g2d.drawString(pageText, pageTextX, pageTextY);
+
+        drawButtonRow(g2d, layout.panelRect, buttonY, OverlayButton.PREV, OverlayButton.NEXT, OverlayButton.CLOSE);
     }
 
     private void drawButtonRow(Graphics2D g2d, Rectangle panelRect, int y, OverlayButton... buttons) {
@@ -543,7 +583,7 @@ public class OverlayPanel extends JPanel {
     }
 
     private void drawButton(Graphics2D g2d, Rectangle rect, OverlayButton button) {
-        boolean disabled = button == OverlayButton.START && !canStart();
+        boolean disabled = isButtonDisabled(button);
         BufferedImage image;
         if (disabled) {
             image = assets.getImage("ui_button_disabled_260x72.png");
@@ -563,6 +603,19 @@ public class OverlayPanel extends JPanel {
         int textX = rect.x + (rect.width - textWidth) / 2;
         int textY = centeredTextBaseline(g2d, rect.y, rect.height) - (button.hasSubLabel() ? (int) Math.round(9 * controller.getScale()) : 0);
         g2d.drawString(label, textX, textY);
+    }
+
+    private boolean isButtonDisabled(OverlayButton button) {
+        if (button == OverlayButton.START) {
+            return !canStart();
+        }
+        if (button == OverlayButton.PREV) {
+            return infoPageIndex <= 0;
+        }
+        if (button == OverlayButton.NEXT) {
+            return infoPageIndex >= INFO_PAGES.size() - 1;
+        }
+        return false;
     }
 
     private int centeredTextBaseline(Graphics2D g2d, int rectY, int rectHeight) {
@@ -592,6 +645,8 @@ public class OverlayPanel extends JPanel {
         NEW_GAME("NEW GAME", null),
         MENU("MENU", null),
         RESTART("RESTART", null),
+        PREV("PREV", null),
+        NEXT("NEXT", null),
         CLOSE("CLOSE", null);
 
         private final String label;

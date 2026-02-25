@@ -21,7 +21,7 @@ public class GamePanel extends JPanel {
     private static final int DEFAULT_TOP_UI_MARGIN = 96;
     private static final int DEFAULT_CENTER_MARGIN = 24;
     private static final int INFO_ICON_BASE_SIZE = 32;
-    private static final int INFO_ICON_MARGIN = 12;
+    private static final int INFO_ICON_MARGIN = 16;
 
     private final AssetManager assets;
     private final GameModel model;
@@ -222,7 +222,7 @@ public class GamePanel extends JPanel {
 
 
     private void drawInfoIcon(Graphics2D g2d) {
-        int iconSize = Math.max(INFO_ICON_BASE_SIZE, INFO_ICON_BASE_SIZE * uiScale);
+        int iconSize = INFO_ICON_BASE_SIZE * uiScale;
         int margin = INFO_ICON_MARGIN * uiScale;
         int x = margin;
         int y = getHeight() - iconSize - margin;
